@@ -1,8 +1,11 @@
+source("http://news.mrdwab.com/install_github.R")
+install_github("mrdwab/SOfun")
+library(SOfun)
 library(rtweet)
 library(lubridate)
 library(tidyverse)
 
-get_pressao <- function(tweets) {
+get_pressao_twitter <- function(tweets) {
   pressao <- tweets %>%
     group_by(termo, week) %>%
     summarise(tweets = n(),
@@ -14,6 +17,12 @@ get_tweets_pls <- function(words_df) {
   tweets_apelidos <- purrr::map_df(words_df$apelido, ~ .get_tweets(.x))
   tweets_nome_formal <- purrr::map_df(words_df$nome_formal, ~ .get_tweets(.x))
   tweets <- bind_rows(tweets_apelidos, tweets_nome_formal)
+  cols <- sapply(tweets, class)
+  cols_type_list <- cols %in% 'list'
+  names_cols <- cols[cols_type_list]
+  columns <- names(names_cols)
+  tweets_unlist <- col_flatten(tweets, cols = columns)
+  tweets_unlist <- tweets_unlist %>% select(-columns)
 }
 
 .get_tweets <- function(word) {
