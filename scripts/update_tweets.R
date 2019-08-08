@@ -36,6 +36,6 @@ updated_tweets <- bind_rows(new_tweets, old_tweets)
 
 trends <- leggoTrends::generate_twitter_trends(updated_tweets)
 
-write_csv(updated_tweets, paste0(data_path, "/tweetssss.csv"))
+write_csv(updated_tweets, paste0(data_path, "/tweets.csv"))
 
 write_csv(trends, paste0(data_path, "/trends.csv"))
