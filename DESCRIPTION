@@ -15,7 +15,8 @@ Encoding: UTF-8
 LazyData: true
 Imports: rtweet,
         lubridate,
-        tidyverse
+        tidyverse,
+        SOfun
 Suggests: testthat,
     knitr,
     vistime,
