@@ -2,6 +2,7 @@ library(rtweet)
 library(lubridate)
 library(tidyverse)
 
+#'@export
 get_tweets_pls <- function(words_df) {
   tweets <- purrr::map_df(words_df$termos, ~ .get_tweets(.x))
   
