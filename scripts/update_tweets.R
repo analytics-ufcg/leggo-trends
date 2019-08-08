@@ -18,6 +18,7 @@ data_path <- args[2]
 
 ## Install local repository R package version
 devtools::install()
+devtools::install_github("mrdwab/SOfun")
 
 ## Read PLs list
 pls_words <- readr::read_csv(pls_words_filepath)
@@ -26,7 +27,7 @@ current_tweets <- readr::read_csv(paste0(data_path, "/tweets.csv"),
                                   col_types = list(
                                     .default = readr::col_character()))
 
-new_tweets <- leggoTrends::get_tweets_pls(pls_words) %>% 
+new_tweets <- leggoTrends::get_tweets_pls(pls_words) %>%
   dplyr::mutate_all(~ as.character(.))
 
 old_tweets = current_tweets %>% dplyr::filter(!(status_id %in% new_tweets$status_id))
