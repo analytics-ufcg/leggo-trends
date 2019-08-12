@@ -25,20 +25,18 @@ knitr::opts_chunk$set(echo = FALSE,
 ```
 
 ```{r, message=FALSE}
-previdencia_nome_formal <- read_csv("../data/previdencia_formal.csv") %>% 
+previdencia_nome_formal <- read_csv("../data/nova_previdencia.csv") %>% 
   mutate(nome_formal = "pec 06/2019")
 
-liberdade_economica_nome_formal <- read_csv("../data/liberdade_economica_formal.csv") %>% 
+liberdade_economica_nome_formal <- read_csv("../data/liberdade_economica.csv") %>% 
   mutate(nome_formal = "mpv 881/2019 ")
 
-mercado_agua_nome_formal <- read_csv("../data/mercado_agua_formal.csv") %>% 
+mercado_agua_nome_formal <- read_csv("../data/mercado_da_agua.csv") %>% 
   mutate(nome_formal = "pls 495/2017")
 
 props_nome_formal <- bind_rows(previdencia_nome_formal, 
                                liberdade_economica_nome_formal,
-                               mercado_agua_nome_formal) %>% 
-  group_by(date, nome_formal, pop, isPartial) %>% 
-  mutate(semana = epiweek(date))
+                               mercado_agua_nome_formal)
 ```
 
 ```{r, message=FALSE}
@@ -66,7 +64,31 @@ ggplotly(p)
 ```
 
 ```{r}
+
+p <- props_nome_formal %>%  ggplot() + 
+  geom_area(aes(x=date, y = pop, fill = nome_formal)) +
+  ggplot2::xlab("Tempo") + 
+  ggplot2::ylab("Pressão") +
+  ggplot2::theme_minimal() +
+  ggplot2::facet_grid(rows = vars(nome_formal)) 
+
+ggplotly(p)
+
 ```
 
 ```{r}
+semana <- props_nome_formal %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(nome_formal, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+p <- semana %>%  ggplot() + 
+  geom_area(aes(x=semana, y = pop_semana, fill = nome_formal)) +
+  ggplot2::xlab("Tempo") + 
+  ggplot2::ylab("Pressão") +
+  ggplot2::theme_minimal() +
+  ggplot2::facet_grid(rows = vars(nome_formal)) 
+
+ggplotly(p)
+
 ```
