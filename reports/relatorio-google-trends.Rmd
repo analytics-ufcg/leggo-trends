@@ -1,0 +1,72 @@
+---
+title: "Pressão das proposições pelo Google Trends"
+author: "Equipe Leg.go"
+date: "12/08/2019"
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
+---
+
+```{r knitr_init, echo=FALSE, message=FALSE, warning=FALSE, cache=FALSE, paged.print=FALSE, results="asis"}
+library(magrittr)
+library(tidyverse)
+library(readr)
+library(plotly)
+library(lubridate)
+
+knitr::opts_chunk$set(echo = FALSE,
+	             cache = FALSE,
+               prompt = FALSE,
+               tidy = FALSE,
+               comment = NA,
+               message = FALSE,
+               warning = FALSE)
+```
+
+```{r, message=FALSE}
+previdencia_nome_formal <- read_csv("../data/previdencia_formal.csv") %>% 
+  mutate(nome_formal = "pec 06/2019")
+
+liberdade_economica_nome_formal <- read_csv("../data/liberdade_economica_formal.csv") %>% 
+  mutate(nome_formal = "mpv 881/2019 ")
+
+mercado_agua_nome_formal <- read_csv("../data/mercado_agua_formal.csv") %>% 
+  mutate(nome_formal = "pls 495/2017")
+
+props_nome_formal <- bind_rows(previdencia_nome_formal, 
+                               liberdade_economica_nome_formal,
+                               mercado_agua_nome_formal) %>% 
+  group_by(date, nome_formal, pop, isPartial) %>% 
+  mutate(semana = epiweek(date))
+```
+
+```{r, message=FALSE}
+props_nome_formal %>% 
+  ggplot(aes(x = semana,
+             y = pop,
+             color = nome_formal)) +
+  geom_line()
+```
+
+```{r, message=FALSE}
+previdencia_apelido <- read_csv("../data/previdencia.csv")
+liberdade_economica_apelido <- read_csv("../data/liberdade_economica.csv")
+
+```
+
+```{r, message=FALSE}
+p <- props_nome_formal %>% 
+  ggplot2::ggplot(ggplot2::aes(x = semana, y = pop, fill = nome_formal)) +
+  ggplot2::geom_area(stat="identity") +
+  ggplot2::xlab("Semanas") + 
+  ggplot2::ylab("Popularidade") +
+  ggplot2::theme_minimal() 
+ggplotly(p)
+```
+
+```{r}
+```
+
+```{r}
+```
