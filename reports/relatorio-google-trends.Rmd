@@ -114,3 +114,19 @@ p <- semana_apelido %>%  ggplot() +
 ggplotly(p)
 
 ```
+
+
+```{r}
+atual_popularidade <- semana_apelido %>% 
+  arrange(desc(semana)) %>% 
+  head(4)
+
+p <- atual_popularidade %>%
+  ggplot(aes(x=apelido, y=pop_semana, fill=apelido)) +
+  geom_bar(stat="identity") +
+  ggplot2::xlab("Proposição") +
+  ggplot2::ylab("Populariedade") +
+  coord_cartesian(ylim = c(0, 100))
+
+ggplotly(p)
+```
