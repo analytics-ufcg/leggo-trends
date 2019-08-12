@@ -39,32 +39,25 @@ props_nome_formal <- bind_rows(previdencia_nome_formal,
                                mercado_agua_nome_formal)
 ```
 
-```{r, message=FALSE}
-props_nome_formal %>% 
-  ggplot(aes(x = semana,
-             y = pop,
-             color = nome_formal)) +
-  geom_line()
-```
 
 ```{r, message=FALSE}
-previdencia_apelido <- read_csv("../data/previdencia.csv")
-liberdade_economica_apelido <- read_csv("../data/liberdade_economica.csv")
+previdencia_apelido <- read_csv("../data/nova_previdencia_apelido.csv") %>% 
+  mutate(apelido = "nova previdência")
+liberdade_economica_apelido <- read_csv("../data/liberdade_economica_apelido.csv")%>% 
+  mutate(apelido = "liberdade econômica")
+
+props_apelido <- bind_rows(previdencia_apelido, 
+                               liberdade_economica_apelido)
 
 ```
 
 ```{r, message=FALSE}
-p <- props_nome_formal %>% 
-  ggplot2::ggplot(ggplot2::aes(x = semana, y = pop, fill = nome_formal)) +
-  ggplot2::geom_area(stat="identity") +
-  ggplot2::xlab("Semanas") + 
-  ggplot2::ylab("Popularidade") +
-  ggplot2::theme_minimal() 
-ggplotly(p)
+previdencia_comparacao <- read_csv("../data/comparacao_previdencia.csv")
+liberdade_economica_comparacao <- read_csv("../data/comparacao_liberdade_economica.csv")
 ```
+
 
 ```{r}
-
 p <- props_nome_formal %>%  ggplot() + 
   geom_area(aes(x=date, y = pop, fill = nome_formal)) +
   ggplot2::xlab("Tempo") + 
@@ -88,6 +81,35 @@ p <- semana %>%  ggplot() +
   ggplot2::ylab("Pressão") +
   ggplot2::theme_minimal() +
   ggplot2::facet_grid(rows = vars(nome_formal)) 
+
+ggplotly(p)
+
+```
+
+```{r}
+p <- props_apelido %>%  ggplot() + 
+  geom_area(aes(x=date, y = pop, fill = apelido)) +
+  ggplot2::xlab("Tempo") + 
+  ggplot2::ylab("Pressão") +
+  ggplot2::theme_minimal() +
+  ggplot2::facet_grid(rows = vars(apelido)) 
+
+ggplotly(p)
+
+```
+
+```{r}
+semana_apelido <- props_apelido %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(apelido, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+p <- semana_apelido %>%  ggplot() + 
+  geom_area(aes(x=semana, y = pop_semana, fill = apelido)) +
+  ggplot2::xlab("Tempo") + 
+  ggplot2::ylab("Pressão") +
+  ggplot2::theme_minimal() +
+  ggplot2::facet_grid(rows = vars(apelido)) 
 
 ggplotly(p)
 
