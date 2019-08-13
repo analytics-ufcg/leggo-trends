@@ -225,6 +225,7 @@ ggplotly(p)
 
 ```
 
+A seguir, podemos visualizar a pressão atual e da semana anterior para as duas proposições:
 ```{r}
 atual_popularidade <- semana_apelido %>% 
   arrange(desc(semana)) %>% 
@@ -242,7 +243,7 @@ atual_popularidade <- semana_apelido %>%
 p <- ggplot(data=atual_popularidade,aes(x=apelido, y=pop_semana))+
   geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
   geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
-  geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.4, fill='red', width = 0.2) +
+  geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.5, fill='red', width = 0.2) +
   coord_cartesian(ylim = c(0, 100)) +
   xlab("Apelido") + 
   ylab("Pressão") +
