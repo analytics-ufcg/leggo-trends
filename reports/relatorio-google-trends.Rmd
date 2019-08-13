@@ -1,7 +1,7 @@
 ---
 title: "Pressão das proposições pelo Google Trends"
 author: "Equipe Leg.go"
-date: "12/08/2019"
+date: "13/08/2019"
 output:
   prettydoc::html_pretty:
     theme: leonids
@@ -22,7 +22,9 @@ knitr::opts_chunk$set(echo = FALSE,
                tidy = FALSE,
                comment = NA,
                message = FALSE,
-               warning = FALSE)
+               warning = FALSE,
+	             fig.width=12,
+	             fig.align='center')
 ```
 
 ```{r, message=FALSE}
@@ -57,78 +59,172 @@ previdencia_comparacao <- read_csv("../data/comparacao_previdencia.csv")
 liberdade_economica_comparacao <- read_csv("../data/comparacao_liberdade_economica.csv")
 ```
 
+```{r, message=FALSE}
+meio_ambiente_nome_formal <- read_csv("../data/temas/meio_ambiente/pl_do_veneno.csv") %>% 
+  mutate(tema = "Meio ambiente")
+
+agenda_nacional_nome_formal <- read_csv("../data/temas/agenda_nacional/reforma_tributaria.csv") %>% 
+  mutate(tema = "Ag. nacional")
+
+int_transp_nome_formal <- read_csv("../data/temas/integridade_transp/pac_moro_anticorrupcao.csv") %>% 
+  mutate(tema = "Int. e transparência")
+
+direitos_humanos_nome_formal <- read_csv("../data/temas/direitos_humanos/pec_antiaborto.csv") %>% 
+  mutate(tema = "Dir. humanos")
+
+temas_prop_nome_formal <- bind_rows(meio_ambiente_nome_formal,
+                                    agenda_nacional_nome_formal,
+                                    int_transp_nome_formal,
+                                    direitos_humanos_nome_formal)
+
+```
+
+
+```{r, message=FALSE}
+meio_ambiente_apelido <- read_csv("../data/temas/meio_ambiente/pl_do_veneno_apelido.csv") %>% 
+  mutate(tema = "Meio ambiente")
+
+agenda_nacional_apelido <- read_csv("../data/temas/agenda_nacional/reforma_tributaria_apelido.csv") %>% 
+  mutate(tema = "Agenda nacional")
+
+```
+
+```{r, message=FALSE}
+comparacao_meio_ambiente <- read_csv("../data/temas/meio_ambiente/comparacao_pl_do_veneno.csv")
+comparacao_agenda_nacional <- read_csv("../data/temas/agenda_nacional/comparacao_reforma_tributaria.csv")
+
+```
+
+
+##Status da Pressão
+
+
+A seguir, podemos visualizar a pressão atual e da semana anterior para as duas proposições:
+
+```{r fig.align='center'}
+
+semana_apelido <- props_apelido %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(apelido, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+atual_popularidade <- semana_apelido %>% 
+  arrange(desc(semana)) %>% 
+  head(4) %>% 
+  arrange(apelido, semana) %>% 
+  mutate(pop_ant = lag(pop_semana)) %>% 
+  arrange(desc(semana)) %>% 
+  head(2)
+
+# p <- atual_popularidade %>%
+#   ggplot() +
+#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "red", width = 0.6) +
+#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "blue", width = 0.2, position = "dodge")
+
+p <- ggplot(data=atual_popularidade,aes(x=apelido, y=pop_semana))+
+  geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
+  geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
+  geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.5, fill='red', width = 0.2) +
+  coord_cartesian(ylim = c(0, 100)) +
+  xlab("Apelido") + 
+  ylab("Pressão") +
+  ggplot2::ggtitle("Pressão Recente") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+
+  theme_minimal()
+
+ggplotly(p)
+```
+
+##Evolução da Pressão
+
+
+###PEC 06/2019 - Nova previdência
 
 ```{r}
 semana <- previdencia_nome_formal %>% 
   mutate(semana = epiweek(date)) %>% 
   group_by(nome_formal, semana) %>% 
-  summarise(pop_semana = max(pop))
-
+  summarise(pop_semana = max(pop)) %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
+  
 p <- semana %>%  ggplot() + 
-  geom_area(aes(x=semana, y = pop_semana), fill = "#FF7700") +
-  xlab("Tempo") + 
+  geom_area(aes(x=segunda, y = pop_semana), fill = "#FF7700") +
+  xlab("Semana") + 
   ylab("Pressão") +
+  ggtitle("Evolução da pressão da PEC 06/2019 - Nova previdência") +
+  scale_x_date(date_labels = "%d-%m-%Y") +
   theme_minimal()
-
 ggplotly(p)
-
 ```
 
-**Pico 8ª semana:** Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
+**Pico semana 18/02:** Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
 
-**Pico 12ª semana:** 17/03... Apresentado vários requerimos de realização de Audiência Pública.
+**Pico semana 18/03:** Apresentado vários requerimos de realização de Audiência Pública.
 
-**Pico 20ª semana:** 12/05... - Aprovado requerimento do Sr. Paulo Pereira da Silva que requer a realização de Audiência Pública para debater os itens da Proposta de Emenda à Constituição nº 6, de 2019, a Reforma da Previdência, do Poder Executivo (Comissão Especial).
+**Pico semana 18/05:** Aprovado requerimento do Sr. Paulo Pereira da Silva que requer a realização de Audiência Pública para debater os itens da Proposta de Emenda à Constituição nº 6, de 2019, a Reforma da Previdência, do Poder Executivo (Comissão Especial).
 
-**Pico 28ª semana:** 10/07 - 12/07 votação em primeiro turno no plenário da câmara.
+**Pico semana 08/07:** Votação em primeiro turno no plenário da câmara.
 
-**Queda acentuada 29ª semana:** Recesso parlamentar
+**Queda acentuada semana 15/07:** Recesso parlamentar
+
+###MPV 881/2019 - Liberdade Econômica
 
 ```{r}
+
 semana <- liberdade_economica_nome_formal %>% 
   mutate(semana = epiweek(date)) %>% 
   group_by(nome_formal, semana) %>% 
-  summarise(pop_semana = max(pop))
-
+  summarise(pop_semana = max(pop)) %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
+  
 p <- semana %>%  ggplot() + 
-  geom_area(aes(x=semana, y = pop_semana), fill = "#7678ED") +
-  xlab("Tempo") + 
+  geom_area(aes(x=segunda, y = pop_semana), fill = "#7678ED") +
+  xlab("Semana") + 
   ylab("Pressão") +
+  ggtitle("Evolução da pressão da MPV 881/2019") +
+  scale_x_date(date_labels = "%d-%m-%Y") +
   theme_minimal()
 
 ggplotly(p)
 
 ```
 
-**Pico 25ª semana:** 16/06.... - Materia foi recebida pelo relator (CMMPV). Apresentação de 2 requerimentos de audiência pública.
+**Pico semana 17/06:** Materia foi recebida pelo relator (CMMPV). Apresentação de 2 requerimentos de audiência pública.
 
-**Pico 28ª semana:** 08/07... - Aprovado parecer na comissão (CMMPV)
+**Pico semana 08/07:** Aprovado parecer na comissão (CMMPV)
 
-**29ª semana:** Medida Provisória enviada à Câmara dos Deputados
+**Semana 15/07:** Medida Provisória enviada à Câmara dos Deputados
 
+###PLS 495/2017 - Mercado da Água
 
 ```{r}
+
 semana <- mercado_agua_nome_formal %>% 
   mutate(semana = epiweek(date)) %>% 
   group_by(nome_formal, semana) %>% 
-  summarise(pop_semana = max(pop))
+  summarise(pop_semana = max(pop)) %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
 
 p <- semana %>%  ggplot() + 
-  geom_area(aes(x=semana, y = pop_semana), fill = "#BFACAA") +
+  geom_area(aes(x=segunda, y = pop_semana), fill = "#BFACAA") +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Evolução da pressão da PLS 495/2017") +
+  scale_x_date(date_labels = "%d-%m-%Y") +
   theme_minimal()
 
 ggplotly(p)
 
 ```
 
+**Pico semana 20/05:** Não conseguimos explicar
 
-**Pico 29ª semana:** 19/07 - ["Consulta pública sobre venda do aquífero Guarani"](https://www1.folha.uol.com.br/poder/2019/07/nao-existe-consulta-publica-sobre-venda-do-aquifero-guarani-nem-bolsonaro-e-guedes-estao-envolvidos.shtml)
+**Pico semana 15/07:** ["Consulta pública sobre venda do aquífero Guarani"](https://www1.folha.uol.com.br/poder/2019/07/nao-existe-consulta-publica-sobre-venda-do-aquifero-guarani-nem-bolsonaro-e-guedes-estao-envolvidos.shtml)
 
 Postagem falsa liga governo a PL de 2017 e que não se refere à venda do aquífero Guarani
 
-**Pico 21ª semana:** 20/05 - Não conseguimos explicar
+
+##Fonte da Pressão: Nome Formal vs. Apelido
 
 ```{r}
 # Comparação entre nome formal e apelido
@@ -140,18 +236,23 @@ semana_comp <- previdencia_comparacao %>%
 
 semana_comp_ap <- semana_comp %>% 
   select(pop = pop_semana_ap, semana) %>% 
-  mutate(nome_prop = "nova previdência")
+  mutate(nome_prop = "nova previdência") %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
+
 
 semana_comp_nf <- semana_comp %>% 
   select(pop = pop_semana_nf, semana) %>% 
-  mutate(nome_prop = "pec 06/2019")
+  mutate(nome_prop = "pec 06/2019") %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
 
 semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
 
 p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() + 
-  geom_area(aes(x=semana, y = pop, fill = nome_prop)) +
+  geom_area(aes(x=segunda, y = pop, fill = nome_prop)) +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Comparação da evolução da pressão - PEC: Apelido vs Nome formal") +
+  scale_x_date(date_labels = "%d-%m-%Y") +
   theme_minimal() +
   facet_grid(rows = vars(nome_prop)) 
   
@@ -159,7 +260,12 @@ p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() +
 ggplotly(p)
 
 ```
-![some caption](previdencia.png)
+
+###Comparação entre termos comuns para PEC 06/2019
+
+<div style="width:1000px">
+![](previdencia.png)
+</div>
 
 
 ```{r}
@@ -172,37 +278,26 @@ semana_comp <- liberdade_economica_comparacao %>%
 
 semana_comp_ap <- semana_comp %>% 
   select(pop = pop_semana_ap, semana) %>% 
-  mutate(nome_prop = "liberdade econômica")
+  mutate(nome_prop = "liberdade econômica")  %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
 
 semana_comp_nf <- semana_comp %>% 
   select(pop = pop_semana_nf, semana) %>% 
-  mutate(nome_prop = "mpv 881/2019")
+  mutate(nome_prop = "mpv 881/2019") %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
 
 semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
 
 p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() + 
-  geom_area(aes(x=semana, y = pop, fill = nome_prop)) +
+  geom_area(aes(x=segunda, y = pop, fill = nome_prop)) +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Comparação da evolução da pressão - MPV: Apelido vs Nome formal") +
+  scale_x_date(date_labels = "%d-%m-%Y") +
   theme_minimal() +
   facet_grid(rows = vars(nome_prop)) 
   
-
 ggplotly(p)
-
 ```
-**Pico 18ª semana:** 30/04... - Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
-# ```{r}
-# atual_popularidade <- semana_apelido %>% 
-#   arrange(desc(semana)) %>% 
-#   head(4)
-# 
-# p <- atual_popularidade %>%
-#   ggplot(aes(x=apelido, y=pop_semana, fill=apelido)) +
-#   geom_bar(stat="identity") +
-#   ggplot2::xlab("Proposição") +
-#   ggplot2::ylab("Populariedade") +
-#   coord_cartesian(ylim = c(0, 100))
-# 
-# ggplotly(p)
-# ```
+**Pico semana 29/04:** Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
+
