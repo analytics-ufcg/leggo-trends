@@ -121,18 +121,22 @@ atual_popularidade <- semana_apelido %>%
   arrange(desc(semana)) %>% 
   head(4) %>% 
   arrange(apelido, semana) %>% 
-  mutate(diff = lag(pop_semana)) %>% 
+  mutate(pop_ant = lag(pop_semana)) %>% 
   arrange(desc(semana)) %>% 
   head(2)
 
-p <- atual_popularidade %>%
-  ggplot(aes(x=apelido, y=pop_semana, fill=apelido)) +
-  geom_bar(stat="identity") +
-  geom_errorbar(aes(y = diff, ymin = diff, ymax = diff, width = 1.4), )+
-  
-  ggplot2::xlab("Proposição") +
-  ggplot2::ylab("Populariedade") +
-  coord_cartesian(ylim = c(0, 100))
+# p <- atual_popularidade %>%
+#   ggplot() +
+#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "red", width = 0.6) +
+#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "blue", width = 0.2, position = "dodge")
+
+p <- ggplot(data=atual_popularidade,aes(x=apelido, y=pop_semana))+
+  geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
+  geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=.6, fill='pink', width = 0.3) +
+  geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.4, fill='red', width = 0.2) +
+  coord_cartesian(ylim = c(0, 100)) +
+  theme_minimal()
+
 
 ggplotly(p)
 ```
