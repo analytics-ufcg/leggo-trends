@@ -59,36 +59,6 @@ liberdade_economica_comparacao <- read_csv("../data/comparacao_liberdade_economi
 
 
 ```{r}
-p <- props_nome_formal %>%  ggplot() + 
-  geom_area(aes(x=date, y = pop, fill = nome_formal)) +
-  xlab("Tempo") + 
-  ylab("Pressão") +
-  theme_minimal() +
-  facet_grid(rows = vars(nome_formal)) 
-
-ggplotly(p)
-
-```
-
-```{r}
-semana <- props_nome_formal %>% 
-  mutate(semana = epiweek(date)) %>% 
-  group_by(nome_formal, semana) %>% 
-  summarise(pop_semana = max(pop))
-
-p <- semana %>%  ggplot() + 
-  geom_area(aes(x=semana, y = pop_semana, fill = nome_formal)) +
-  xlab("Tempo") + 
-  ylab("Pressão") +
-  theme_minimal() +
-  facet_grid(rows = vars(nome_formal)) 
-
-ggplotly(p)
-
-```
-
-
-```{r}
 semana <- previdencia_nome_formal %>% 
   mutate(semana = epiweek(date)) %>% 
   group_by(nome_formal, semana) %>% 
@@ -103,6 +73,16 @@ p <- semana %>%  ggplot() +
 ggplotly(p)
 
 ```
+
+**Pico 8ª semana:** Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
+
+**Pico 12ª semana:** 17/03... Apresentado vários requerimos de realização de Audiência Pública.
+
+**Pico 20ª semana:** 12/05... - Aprovado requerimento do Sr. Paulo Pereira da Silva que requer a realização de Audiência Pública para debater os itens da Proposta de Emenda à Constituição nº 6, de 2019, a Reforma da Previdência, do Poder Executivo (Comissão Especial).
+
+**Pico 28ª semana:** 10/07 - 12/07 votação em primeiro turno no plenário da câmara.
+
+**Queda acentuada 29ª semana:** Recesso parlamentar
 
 ```{r}
 semana <- liberdade_economica_nome_formal %>% 
@@ -120,6 +100,13 @@ ggplotly(p)
 
 ```
 
+**Pico 25ª semana:** 16/06.... - Materia foi recebida pelo relator (CMMPV). Apresentação de 2 requerimentos de audiência pública.
+
+**Pico 28ª semana:** 08/07... - Aprovado parecer na comissão (CMMPV)
+
+**29ª semana:** Medida Provisória enviada à Câmara dos Deputados
+
+
 ```{r}
 semana <- mercado_agua_nome_formal %>% 
   mutate(semana = epiweek(date)) %>% 
@@ -136,34 +123,12 @@ ggplotly(p)
 
 ```
 
-```{r}
-p <- props_apelido %>%  ggplot() + 
-  geom_area(aes(x=date, y = pop, fill = apelido)) +
-  ggplot2::xlab("Tempo") + 
-  ggplot2::ylab("Pressão") +
-  ggplot2::theme_minimal() +
-  ggplot2::facet_grid(rows = vars(apelido)) 
 
-ggplotly(p)
+**Pico 29ª semana:** 19/07 - ["Consulta pública sobre venda do aquífero Guarani"](https://www1.folha.uol.com.br/poder/2019/07/nao-existe-consulta-publica-sobre-venda-do-aquifero-guarani-nem-bolsonaro-e-guedes-estao-envolvidos.shtml)
 
-```
+Postagem falsa liga governo a PL de 2017 e que não se refere à venda do aquífero Guarani
 
-```{r}
-semana_apelido <- props_apelido %>% 
-  mutate(semana = epiweek(date)) %>% 
-  group_by(apelido, semana) %>% 
-  summarise(pop_semana = max(pop))
-
-p <- semana_apelido %>%  ggplot() + 
-  geom_area(aes(x=semana, y = pop_semana, fill = apelido)) +
-  ggplot2::xlab("Tempo") + 
-  ggplot2::ylab("Pressão") +
-  ggplot2::theme_minimal() +
-  ggplot2::facet_grid(rows = vars(apelido)) 
-
-ggplotly(p)
-
-```
+**Pico 21ª semana:** 20/05 - Não conseguimos explicar
 
 ```{r}
 # Comparação entre nome formal e apelido
@@ -194,6 +159,8 @@ p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() +
 ggplotly(p)
 
 ```
+![some caption](previdencia.png)
+
 
 ```{r}
 # Comparação entre nome formal e apelido
@@ -224,18 +191,18 @@ p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() +
 ggplotly(p)
 
 ```
-
-```{r}
-atual_popularidade <- semana_apelido %>% 
-  arrange(desc(semana)) %>% 
-  head(4)
-
-p <- atual_popularidade %>%
-  ggplot(aes(x=apelido, y=pop_semana, fill=apelido)) +
-  geom_bar(stat="identity") +
-  ggplot2::xlab("Proposição") +
-  ggplot2::ylab("Populariedade") +
-  coord_cartesian(ylim = c(0, 100))
-
-ggplotly(p)
-```
+**Pico 18ª semana:** 30/04... - Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
+# ```{r}
+# atual_popularidade <- semana_apelido %>% 
+#   arrange(desc(semana)) %>% 
+#   head(4)
+# 
+# p <- atual_popularidade %>%
+#   ggplot(aes(x=apelido, y=pop_semana, fill=apelido)) +
+#   geom_bar(stat="identity") +
+#   ggplot2::xlab("Proposição") +
+#   ggplot2::ylab("Populariedade") +
+#   coord_cartesian(ylim = c(0, 100))
+# 
+# ggplotly(p)
+# ```
