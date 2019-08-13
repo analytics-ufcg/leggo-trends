@@ -60,21 +60,37 @@ liberdade_economica_comparacao <- read_csv("../data/comparacao_liberdade_economi
 ```{r, message=FALSE}
 meio_ambiente_nome_formal <- read_csv("../data/temas/meio_ambiente/pl_do_veneno.csv") %>% 
   mutate(tema = "Meio ambiente")
-meio_ambiente_apelido <- read_csv("../data/temas/meio_ambiente/pl_do_veneno_apelido.csv") %>% 
-  mutate(tema = "Meio ambiente")
-comparacao_meio_ambiente <- read_csv("../data/temas/meio_ambiente/comparacao_pl_do_veneno.csv")
 
 agenda_nacional_nome_formal <- read_csv("../data/temas/agenda_nacional/reforma_tributaria.csv") %>% 
-  mutate(tema = "Agenda nacional")
-agenda_nacional_apelido <- read_csv("../data/temas/agenda_nacional/reforma_tributaria_apelido.csv") %>% 
-  mutate(tema = "Agenda nacional")
-comparacao_agenda_nacional <- read_csv("../data/temas/agenda_nacional/comparacao_reforma_tributaria.csv")
+  mutate(tema = "Ag. nacional")
 
 int_transp_nome_formal <- read_csv("../data/temas/integridade_transp/pac_moro_anticorrupcao.csv") %>% 
-  mutate(tema = "Integridade e transparência")
+  mutate(tema = "Int. e transparência")
 
 direitos_humanos_nome_formal <- read_csv("../data/temas/direitos_humanos/pec_antiaborto.csv") %>% 
-  mutate(tema = "Direitos humanos")
+  mutate(tema = "Dir. humanos")
+
+temas_prop_nome_formal <- bind_rows(meio_ambiente_nome_formal,
+                                    agenda_nacional_nome_formal,
+                                    int_transp_nome_formal,
+                                    direitos_humanos_nome_formal)
+
+```
+
+
+```{r, message=FALSE}
+meio_ambiente_apelido <- read_csv("../data/temas/meio_ambiente/pl_do_veneno_apelido.csv") %>% 
+  mutate(tema = "Meio ambiente")
+
+agenda_nacional_apelido <- read_csv("../data/temas/agenda_nacional/reforma_tributaria_apelido.csv") %>% 
+  mutate(tema = "Agenda nacional")
+
+```
+
+```{r, message=FALSE}
+comparacao_meio_ambiente <- read_csv("../data/temas/meio_ambiente/comparacao_pl_do_veneno.csv")
+comparacao_agenda_nacional <- read_csv("../data/temas/agenda_nacional/comparacao_reforma_tributaria.csv")
+
 ```
 
 ```{r}
@@ -155,6 +171,24 @@ p <- semana %>%  ggplot() +
   ylab("Pressão") +
   ggtitle("Evolução da pressão da PLS 45/2017") +
   theme_minimal()
+
+ggplotly(p)
+
+```
+
+```{r}
+temas_semana <- temas_prop_nome_formal %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(tema, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+p <- temas_semana %>%  ggplot() + 
+  geom_area(aes(x=semana, y = pop_semana, fill = tema)) +
+  xlab("Tempo") + 
+  ylab("Pressão") +
+  ggtitle("Evolução da pressão por tema ao longo das semanas") +
+  theme_minimal() +
+  facet_grid(rows = vars(tema)) 
 
 ggplotly(p)
 
