@@ -57,12 +57,32 @@ previdencia_comparacao <- read_csv("../data/comparacao_previdencia.csv")
 liberdade_economica_comparacao <- read_csv("../data/comparacao_liberdade_economica.csv")
 ```
 
+```{r, message=FALSE}
+meio_ambiente_nome_formal <- read_csv("../data/temas/meio_ambiente/pl_do_veneno.csv") %>% 
+  mutate(tema = "Meio ambiente")
+meio_ambiente_apelido <- read_csv("../data/temas/meio_ambiente/pl_do_veneno_apelido.csv") %>% 
+  mutate(tema = "Meio ambiente")
+comparacao_meio_ambiente <- read_csv("../data/temas/meio_ambiente/comparacao_pl_do_veneno.csv")
+
+agenda_nacional_nome_formal <- read_csv("../data/temas/agenda_nacional/reforma_tributaria.csv") %>% 
+  mutate(tema = "Agenda nacional")
+agenda_nacional_apelido <- read_csv("../data/temas/agenda_nacional/reforma_tributaria_apelido.csv") %>% 
+  mutate(tema = "Agenda nacional")
+comparacao_agenda_nacional <- read_csv("../data/temas/agenda_nacional/comparacao_reforma_tributaria.csv")
+
+int_transp_nome_formal <- read_csv("../data/temas/integridade_transp/pac_moro_anticorrupcao.csv") %>% 
+  mutate(tema = "Integridade e transparência")
+
+direitos_humanos_nome_formal <- read_csv("../data/temas/direitos_humanos/pec_antiaborto.csv") %>% 
+  mutate(tema = "Direitos humanos")
+```
 
 ```{r}
 p <- props_nome_formal %>%  ggplot() + 
   geom_area(aes(x=date, y = pop, fill = nome_formal)) +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Evolução da pressão ao longo dos dias") +
   theme_minimal() +
   facet_grid(rows = vars(nome_formal)) 
 
@@ -80,6 +100,7 @@ p <- semana %>%  ggplot() +
   geom_area(aes(x=semana, y = pop_semana, fill = nome_formal)) +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Evolução da pressão ao longo das semanas") +
   theme_minimal() +
   facet_grid(rows = vars(nome_formal)) 
 
@@ -98,6 +119,7 @@ p <- semana %>%  ggplot() +
   geom_area(aes(x=semana, y = pop_semana), fill = "#FF7700") +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Evolução da pressão da PEC 06/2019 - Nova previdência") +
   theme_minimal()
 
 ggplotly(p)
@@ -114,6 +136,7 @@ p <- semana %>%  ggplot() +
   geom_area(aes(x=semana, y = pop_semana), fill = "#7678ED") +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Evolução da pressão da MPV 881/2019") +
   theme_minimal()
 
 ggplotly(p)
@@ -130,6 +153,7 @@ p <- semana %>%  ggplot() +
   geom_area(aes(x=semana, y = pop_semana), fill = "#BFACAA") +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Evolução da pressão da PLS 45/2017") +
   theme_minimal()
 
 ggplotly(p)
@@ -141,6 +165,7 @@ p <- props_apelido %>%  ggplot() +
   geom_area(aes(x=date, y = pop, fill = apelido)) +
   ggplot2::xlab("Tempo") + 
   ggplot2::ylab("Pressão") +
+  ggtitle("Evolução da pressão dos apelidos ao longo dos dias") +
   ggplot2::theme_minimal() +
   ggplot2::facet_grid(rows = vars(apelido)) 
 
@@ -158,6 +183,7 @@ p <- semana_apelido %>%  ggplot() +
   geom_area(aes(x=semana, y = pop_semana, fill = apelido)) +
   ggplot2::xlab("Tempo") + 
   ggplot2::ylab("Pressão") +
+  ggtitle("Evolução da pressão dos apelidos ao longo das semanas") +
   ggplot2::theme_minimal() +
   ggplot2::facet_grid(rows = vars(apelido)) 
 
@@ -187,6 +213,7 @@ p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() +
   geom_area(aes(x=semana, y = pop, fill = nome_prop)) +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Comparação da evolução da pressão - PEC: Apelido vs Nome formal") +
   theme_minimal() +
   facet_grid(rows = vars(nome_prop)) 
   
@@ -217,6 +244,7 @@ p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() +
   geom_area(aes(x=semana, y = pop, fill = nome_prop)) +
   xlab("Tempo") + 
   ylab("Pressão") +
+  ggtitle("Comparação da evolução da pressão - MPV: Apelido vs Nome formal") +
   theme_minimal() +
   facet_grid(rows = vars(nome_prop)) 
   
