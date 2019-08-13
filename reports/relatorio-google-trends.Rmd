@@ -14,6 +14,7 @@ library(tidyverse)
 library(readr)
 library(plotly)
 library(lubridate)
+library(ggplot2)
 
 knitr::opts_chunk$set(echo = FALSE,
 	             cache = FALSE,
@@ -46,8 +47,8 @@ previdencia_apelido <- read_csv("../data/nova_previdencia_apelido.csv") %>%
 liberdade_economica_apelido <- read_csv("../data/liberdade_economica_apelido.csv")%>% 
   mutate(apelido = "liberdade econômica")
 
-props_apelido <- bind_rows(previdencia_apelido, 
-                               liberdade_economica_apelido)
+props_apelido <- bind_rows(previdencia_apelido,
+                           liberdade_economica_apelido)
 
 ```
 
@@ -60,10 +61,10 @@ liberdade_economica_comparacao <- read_csv("../data/comparacao_liberdade_economi
 ```{r}
 p <- props_nome_formal %>%  ggplot() + 
   geom_area(aes(x=date, y = pop, fill = nome_formal)) +
-  ggplot2::xlab("Tempo") + 
-  ggplot2::ylab("Pressão") +
-  ggplot2::theme_minimal() +
-  ggplot2::facet_grid(rows = vars(nome_formal)) 
+  xlab("Tempo") + 
+  ylab("Pressão") +
+  theme_minimal() +
+  facet_grid(rows = vars(nome_formal)) 
 
 ggplotly(p)
 
@@ -77,10 +78,59 @@ semana <- props_nome_formal %>%
 
 p <- semana %>%  ggplot() + 
   geom_area(aes(x=semana, y = pop_semana, fill = nome_formal)) +
-  ggplot2::xlab("Tempo") + 
-  ggplot2::ylab("Pressão") +
-  ggplot2::theme_minimal() +
-  ggplot2::facet_grid(rows = vars(nome_formal)) 
+  xlab("Tempo") + 
+  ylab("Pressão") +
+  theme_minimal() +
+  facet_grid(rows = vars(nome_formal)) 
+
+ggplotly(p)
+
+```
+
+
+```{r}
+semana <- previdencia_nome_formal %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(nome_formal, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+p <- semana %>%  ggplot() + 
+  geom_area(aes(x=semana, y = pop_semana), fill = "#FF7700") +
+  xlab("Tempo") + 
+  ylab("Pressão") +
+  theme_minimal()
+
+ggplotly(p)
+
+```
+
+```{r}
+semana <- liberdade_economica_nome_formal %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(nome_formal, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+p <- semana %>%  ggplot() + 
+  geom_area(aes(x=semana, y = pop_semana), fill = "#7678ED") +
+  xlab("Tempo") + 
+  ylab("Pressão") +
+  theme_minimal()
+
+ggplotly(p)
+
+```
+
+```{r}
+semana <- mercado_agua_nome_formal %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(nome_formal, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+p <- semana %>%  ggplot() + 
+  geom_area(aes(x=semana, y = pop_semana), fill = "#BFACAA") +
+  xlab("Tempo") + 
+  ylab("Pressão") +
+  theme_minimal()
 
 ggplotly(p)
 
@@ -115,6 +165,65 @@ ggplotly(p)
 
 ```
 
+```{r}
+# Comparação entre nome formal e apelido
+semana_comp <- previdencia_comparacao %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(semana) %>% 
+  summarise(pop_semana_nf = max(pop_nome_formal),
+            pop_semana_ap = max(pop_apelido))
+
+semana_comp_ap <- semana_comp %>% 
+  select(pop = pop_semana_ap, semana) %>% 
+  mutate(nome_prop = "nova previdência")
+
+semana_comp_nf <- semana_comp %>% 
+  select(pop = pop_semana_nf, semana) %>% 
+  mutate(nome_prop = "pec 06/2019")
+
+semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
+
+p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() + 
+  geom_area(aes(x=semana, y = pop, fill = nome_prop)) +
+  xlab("Tempo") + 
+  ylab("Pressão") +
+  theme_minimal() +
+  facet_grid(rows = vars(nome_prop)) 
+  
+
+ggplotly(p)
+
+```
+
+```{r}
+# Comparação entre nome formal e apelido
+semana_comp <- liberdade_economica_comparacao %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(semana) %>% 
+  summarise(pop_semana_nf = max(pop_nome_formal),
+            pop_semana_ap = max(pop_apelido))
+
+semana_comp_ap <- semana_comp %>% 
+  select(pop = pop_semana_ap, semana) %>% 
+  mutate(nome_prop = "liberdade econômica")
+
+semana_comp_nf <- semana_comp %>% 
+  select(pop = pop_semana_nf, semana) %>% 
+  mutate(nome_prop = "mpv 881/2019")
+
+semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
+
+p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() + 
+  geom_area(aes(x=semana, y = pop, fill = nome_prop)) +
+  xlab("Tempo") + 
+  ylab("Pressão") +
+  theme_minimal() +
+  facet_grid(rows = vars(nome_prop)) 
+  
+
+ggplotly(p)
+
+```
 
 ```{r}
 atual_popularidade <- semana_apelido %>% 
