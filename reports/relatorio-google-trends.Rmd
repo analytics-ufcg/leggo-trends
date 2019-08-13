@@ -119,11 +119,17 @@ ggplotly(p)
 ```{r}
 atual_popularidade <- semana_apelido %>% 
   arrange(desc(semana)) %>% 
-  head(4)
+  head(4) %>% 
+  arrange(apelido, semana) %>% 
+  mutate(diff = lag(pop_semana)) %>% 
+  arrange(desc(semana)) %>% 
+  head(2)
 
 p <- atual_popularidade %>%
   ggplot(aes(x=apelido, y=pop_semana, fill=apelido)) +
   geom_bar(stat="identity") +
+  geom_errorbar(aes(y = diff, ymin = diff, ymax = diff, width = 1.4), )+
+  
   ggplot2::xlab("Proposição") +
   ggplot2::ylab("Populariedade") +
   coord_cartesian(ylim = c(0, 100))
