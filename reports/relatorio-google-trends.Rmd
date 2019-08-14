@@ -128,7 +128,9 @@ p <- ggplot(data=atual_popularidade_previdencia,aes(x=apelido, y=pop_semana))+
   ylab("Pressão") +
   ggplot2::ggtitle("Pressão Recente") +
   scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal()
+  theme_minimal() +
+  annotate("text", x=1, 
+           y= 95, label = format(as.Date(prop_maximo$date), "%d/%m/%Y"))
 
 ggplotly(p)
 ```
@@ -151,7 +153,7 @@ atual_popularidade_lib_economica <- semana_apelido_lib_economica %>%
   mutate(pop_ant = lag(pop_semana)) %>% 
   arrange(desc(semana))
 
-prop_maximo <- previdencia_apelido %>% 
+prop_maximo <- liberdade_economica_apelido %>% 
   filter(pop == 100)
 
 p <- ggplot(data=atual_popularidade_lib_economica,aes(x=apelido, y=pop_semana))+
@@ -163,7 +165,9 @@ p <- ggplot(data=atual_popularidade_lib_economica,aes(x=apelido, y=pop_semana))+
   ylab("Pressão") +
   ggplot2::ggtitle("Pressão Recente") +
   scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal()
+  theme_minimal() +
+  annotate("text", x=1, 
+           y= 95, label = format(as.Date(prop_maximo$date), "%d/%m/%Y"))
 
 ggplotly(p)
 ```
