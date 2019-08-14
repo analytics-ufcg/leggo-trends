@@ -96,32 +96,27 @@ comparacao_agenda_nacional <- read_csv("../data/temas/agenda_nacional/comparacao
 ```
 
 
-##Status da Pressão
+##Pressão Recente
 
+Abaixo podemos visualizar a pressão atual e da semana anterior para duas proposições:
 
-A seguir, podemos visualizar a pressão atual e da semana anterior para as duas proposições:
+###PEC 06/2019 - Nova Previdência
 
 ```{r fig.align='center'}
 
-semana_apelido <- props_apelido %>% 
+semana_apelido_previdencia <- previdencia_apelido %>% 
   mutate(semana = epiweek(date)) %>% 
   group_by(apelido, semana) %>% 
   summarise(pop_semana = max(pop))
 
-atual_popularidade <- semana_apelido %>% 
+atual_popularidade_previdencia <- semana_apelido_previdencia %>% 
   arrange(desc(semana)) %>% 
-  head(4) %>% 
+  head(2) %>% 
   arrange(apelido, semana) %>% 
   mutate(pop_ant = lag(pop_semana)) %>% 
-  arrange(desc(semana)) %>% 
-  head(2)
+  arrange(desc(semana))
 
-# p <- atual_popularidade %>%
-#   ggplot() +
-#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "red", width = 0.6) +
-#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "blue", width = 0.2, position = "dodge")
-
-p <- ggplot(data=atual_popularidade,aes(x=apelido, y=pop_semana))+
+p <- ggplot(data=atual_popularidade_previdencia,aes(x=apelido, y=pop_semana))+
   geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
   geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
   geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.5, fill='red', width = 0.2) +
@@ -134,6 +129,45 @@ p <- ggplot(data=atual_popularidade,aes(x=apelido, y=pop_semana))+
 
 ggplotly(p)
 ```
+
+Como podemos perceber, a pressão externa da Reforma da Previdência caiu na última semana.
+
+###MPV 881/2019 - Liberdade Econômica
+
+```{r fig.align='center'}
+
+semana_apelido_lib_economica <- liberdade_economica_apelido %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(apelido, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+atual_popularidade_lib_economica <- semana_apelido_lib_economica %>% 
+  arrange(desc(semana)) %>% 
+  head(2) %>% 
+  arrange(apelido, semana) %>% 
+  mutate(pop_ant = lag(pop_semana)) %>% 
+  arrange(desc(semana))
+
+# p <- atual_popularidade %>%
+#   ggplot() +
+#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "red", width = 0.6) +
+#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "blue", width = 0.2, position = "dodge")
+
+p <- ggplot(data=atual_popularidade_lib_economica,aes(x=apelido, y=pop_semana))+
+  geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
+  geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
+  geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.5, fill='red', width = 0.2) +
+  coord_cartesian(ylim = c(0, 100)) +
+  xlab("Apelido") + 
+  ylab("Pressão") +
+  ggplot2::ggtitle("Pressão Recente") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+
+  theme_minimal()
+
+ggplotly(p)
+```
+
+Como podemos perceber, a pressão externa da MPV da Liberdade Econômica também caiu na última semana.
 
 ##Evolução da Pressão
 
@@ -153,6 +187,7 @@ p <- semana %>%  ggplot() +
   ylab("Pressão") +
   ggtitle("Evolução da pressão da PEC 06/2019 - Nova previdência") +
   scale_x_date(date_labels = "%d-%m-%Y") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+
   theme_minimal()
 ggplotly(p)
 ```
@@ -183,6 +218,7 @@ p <- semana %>%  ggplot() +
   ylab("Pressão") +
   ggtitle("Evolução da pressão da MPV 881/2019") +
   scale_x_date(date_labels = "%d-%m-%Y") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+
   theme_minimal()
 
 ggplotly(p)
@@ -207,10 +243,11 @@ semana <- mercado_agua_nome_formal %>%
 
 p <- semana %>%  ggplot() + 
   geom_area(aes(x=segunda, y = pop_semana), fill = "#BFACAA") +
-  xlab("Tempo") + 
+  xlab("Semana") + 
   ylab("Pressão") +
   ggtitle("Evolução da pressão da PLS 495/2017") +
   scale_x_date(date_labels = "%d-%m-%Y") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+
   theme_minimal()
 
 ggplotly(p)
@@ -249,15 +286,16 @@ semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
 
 p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() + 
   geom_area(aes(x=segunda, y = pop, fill = nome_prop)) +
-  xlab("Tempo") + 
+  xlab("Semana") + 
   ylab("Pressão") +
   ggtitle("Comparação da evolução da pressão - PEC: Apelido vs Nome formal") +
   scale_x_date(date_labels = "%d-%m-%Y") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+
   theme_minimal() +
   facet_grid(rows = vars(nome_prop)) 
   
 
-ggplotly(p)
+ggplotly(hide_legend(p))
 
 ```
 
@@ -266,6 +304,8 @@ ggplotly(p)
 <div style="width:1000px">
 ![](previdencia.png)
 </div>
+
+Como podemos perceber, existem apelidos mais populares (maior pressão) para a Reforma da Previdência, mas cujo comportamento da curva é o mesmo.
 
 
 ```{r}
@@ -289,15 +329,16 @@ semana_comp_nf <- semana_comp %>%
 semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
 
 p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() + 
-  geom_area(aes(x=segunda, y = pop, fill = nome_prop)) +
-  xlab("Tempo") + 
+  geom_area(aes(x=segunda, y = pop, fill = nome_prop), show.legend = FALSE) +
+  xlab("Semana") + 
   ylab("Pressão") +
   ggtitle("Comparação da evolução da pressão - MPV: Apelido vs Nome formal") +
   scale_x_date(date_labels = "%d-%m-%Y") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
   theme_minimal() +
   facet_grid(rows = vars(nome_prop)) 
   
-ggplotly(p)
+ggplotly(hide_legend(p))
 ```
 **Pico semana 29/04:** Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
 
