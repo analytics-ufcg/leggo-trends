@@ -116,6 +116,9 @@ atual_popularidade_previdencia <- semana_apelido_previdencia %>%
   mutate(pop_ant = lag(pop_semana)) %>% 
   arrange(desc(semana))
 
+prop_maximo <- previdencia_apelido %>% 
+  filter(pop == 100)
+
 p <- ggplot(data=atual_popularidade_previdencia,aes(x=apelido, y=pop_semana))+
   geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
   geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
@@ -148,10 +151,8 @@ atual_popularidade_lib_economica <- semana_apelido_lib_economica %>%
   mutate(pop_ant = lag(pop_semana)) %>% 
   arrange(desc(semana))
 
-# p <- atual_popularidade %>%
-#   ggplot() +
-#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "red", width = 0.6) +
-#   geom_histogram(aes(x=apelido, y=value), stat = "identity", fill = "blue", width = 0.2, position = "dodge")
+prop_maximo <- previdencia_apelido %>% 
+  filter(pop == 100)
 
 p <- ggplot(data=atual_popularidade_lib_economica,aes(x=apelido, y=pop_semana))+
   geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
@@ -175,9 +176,9 @@ Como podemos perceber, a pressão externa da MPV da Liberdade Econômica também
 ###PEC 06/2019 - Nova previdência
 
 ```{r}
-semana <- previdencia_nome_formal %>% 
+semana <- previdencia_apelido %>% 
   mutate(semana = epiweek(date)) %>% 
-  group_by(nome_formal, semana) %>% 
+  group_by(apelido, semana) %>% 
   summarise(pop_semana = max(pop)) %>% 
   mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
   
@@ -194,9 +195,9 @@ ggplotly(p)
 
 **Pico semana 18/02:** Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
 
-**Pico semana 18/03:** Apresentado vários requerimos de realização de Audiência Pública.
+**Pico semana 18/03:** [Reforma dos militares](https://economia.uol.com.br/noticias/redacao/2019/03/20/governo-entrega-proposta-militares-reforma-previdencia-aposentadoria.htm) 
 
-**Pico semana 18/05:** Aprovado requerimento do Sr. Paulo Pereira da Silva que requer a realização de Audiência Pública para debater os itens da Proposta de Emenda à Constituição nº 6, de 2019, a Reforma da Previdência, do Poder Executivo (Comissão Especial).
+**Pico semana 22/04:** [Aprovação CCJ](https://g1.globo.com/politica/noticia/2019/04/23/ccj-da-camara-da-aval-a-reforma-da-previdencia-e-texto-segue-para-comissao-especial.ghtml)
 
 **Pico semana 08/07:** Votação em primeiro turno no plenário da câmara.
 
@@ -206,9 +207,9 @@ ggplotly(p)
 
 ```{r}
 
-semana <- liberdade_economica_nome_formal %>% 
+semana <- liberdade_economica_apelido %>% 
   mutate(semana = epiweek(date)) %>% 
-  group_by(nome_formal, semana) %>% 
+  group_by(apelido, semana) %>% 
   summarise(pop_semana = max(pop)) %>% 
   mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
   
@@ -225,11 +226,13 @@ ggplotly(p)
 
 ```
 
-**Pico semana 17/06:** Materia foi recebida pelo relator (CMMPV). Apresentação de 2 requerimentos de audiência pública.
+**Pico semana 29/04:** [Bolsonaro assina mp](https://www.gazetadopovo.com.br/republica/mp-da-liberdade-economica/)
 
-**Pico semana 08/07:** Aprovado parecer na comissão (CMMPV)
+**Pico semana 06/10:** Houve algumas notícias sobre a previdência [OGlobo](https://oglobo.globo.com/economia/governo-dispensa-287-tipos-de-empresas-de-alvaras-de-funcionamento-23735455)
 
-**Semana 15/07:** Medida Provisória enviada à Câmara dos Deputados
+**Pico emana 08/07:** Aprovação na Comissão Mista
+
+**Pico emana 05/08:** [Novo texto](https://exame.abril.com.br/economia/novo-texto-da-mp-da-liberdade-economica-inclui-trabalho-aos-domingos/)
 
 ###PLS 495/2017 - Mercado da Água
 
