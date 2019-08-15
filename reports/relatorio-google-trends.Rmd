@@ -40,6 +40,14 @@ mercado_agua_nome_formal <- read_csv("../data/mercado_da_agua.csv") %>%
 props_nome_formal <- bind_rows(previdencia_nome_formal, 
                                liberdade_economica_nome_formal,
                                mercado_agua_nome_formal)
+
+hist_temperatura <- read_csv('../data/novo_historico_temperatura.csv')
+  
+leggo_ids <- read_csv('../data/leggo_ids.csv')
+
+hist_temp_por_id <- merge(hist_temperatura, leggo_ids, by="id_leggo") %>% 
+  filter(periodo >= lubridate::ymd('2019-02-12'),
+         periodo <= lubridate::ymd('2019-08-09'))
 ```
 
 
@@ -207,6 +215,20 @@ ggplotly(p)
 
 **Queda acentuada semana 15/07:** Recesso parlamentar
 
+```{r}
+hist_previdencia <- hist_temp_por_id %>% 
+  filter(apelido == "Nova Previdência")
+  
+p <- hist_previdencia %>%  ggplot() + 
+  geom_area(aes(x=as.Date(periodo), y = temperatura_recente), fill = "#dc6060") +
+  xlab("Semana") + 
+  ylab("Temperatura") +
+  ggtitle("Evolução da Temperatura da PEC 06/2019 - Nova previdência") +
+  scale_x_date(date_labels = "%d-%m-%Y") +
+  theme_minimal()
+ggplotly(p)
+```
+
 ###MPV 881/2019 - Liberdade Econômica
 
 ```{r}
@@ -238,6 +260,21 @@ ggplotly(p)
 
 **Pico emana 05/08:** [Novo texto](https://exame.abril.com.br/economia/novo-texto-da-mp-da-liberdade-economica-inclui-trabalho-aos-domingos/)
 
+```{r}
+hist_lib_economica <- hist_temp_por_id %>% 
+  filter(apelido == "Liberdade Econômica",
+         id_ext == 136531) 
+  
+p <- hist_lib_economica %>%  ggplot() + 
+  geom_area(aes(x=as.Date(periodo), y = temperatura_recente), fill = "#dc6060") +
+  xlab("Semana") + 
+  ylab("Temperatura") +
+  ggtitle("Evolução da Temperatura da MPV 881/2019 - Liberdade Econômica") +
+  scale_x_date(date_labels = "%d-%m-%Y") +
+  theme_minimal()
+ggplotly(p)
+```
+
 ###PLS 495/2017 - Mercado da Água
 
 ```{r}
@@ -267,6 +304,19 @@ ggplotly(p)
 
 Postagem falsa liga governo a PL de 2017 e que não se refere à venda do aquífero Guarani
 
+```{r}
+hist_mercado_agua <- hist_temp_por_id %>% 
+  filter(apelido == "Mercado da água")
+  
+p <- hist_mercado_agua %>%  ggplot() + 
+  geom_area(aes(x=as.Date(periodo), y = temperatura_recente), fill = "#dc6060") +
+  xlab("Semana") + 
+  ylab("Temperatura") +
+  ggtitle("Evolução da Temperatura da PLS 495/2017 - Mercado da Água") +
+  scale_x_date(date_labels = "%d-%m-%Y") +
+  theme_minimal()
+ggplotly(p)
+```
 
 ##Fonte da Pressão: Nome Formal vs. Apelido
 
