@@ -48,16 +48,27 @@ def formata_timeframe(passado_formatado):
     return passado_formatado + ' ' + date.today().strftime('%Y-%m-%d')
 
 def get_trends(termo, timeframe):
+    '''
+    Retorna os trends
+    '''
+
     pytrend.build_payload(termo, cat=0, timeframe=timeframe, geo='BR', gprop='')
  
 def get_popularidade(termo, timeframe):
+    '''
+    Retorna a popularidade de termos passados em um intervalo de tempo
+    (timeframe)
+    '''
+
     get_trends(termo, timeframe)
     return pytrend.interest_over_time()
 
 def get_termos_relacionados(termo, timeframe):
     '''
-    
+    Retorna os termos relacionados a um termo passado
+    em um período de tempo especificado
     '''
+
     get_trends(termo, timeframe)
     related_queries_dict = pytrend.related_queries()
     if (len(related_queries_dict) == 0):
@@ -67,6 +78,11 @@ def get_termos_relacionados(termo, timeframe):
     return related_queries_df
 
 def get_termos_mais_populares(nome_formal, apelido, timeframe):
+    '''
+    De acordo com os termos relacionados ao nome formal da proposição e a seu apelido
+    retorna os 3 termos mais popularidades 
+    '''
+
     termos_relacionados_formal = get_termos_relacionados([nome_formal], timeframe)
     termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
     termos_relacionados_total = termos_relacionados_formal.append(termos_relacionados_apelido)
@@ -75,17 +91,12 @@ def get_termos_mais_populares(nome_formal, apelido, timeframe):
         termos_relacionados_total = termos_relacionados_total.sort_values(by=['value'], ascending=False)[:3]['query']
     return termos_relacionados_total.values.tolist()
 
-def get_all_trends(termos, timeframe):
-    '''
-    '''
-    columns_names = ['pop', 'isPartial', 'nome']
-    pop_df = get_popularidade(termos, timeframe)
-
-    return pop_df
-
 def calcula_maximos(pop_df, apelido, nome_formal):
     '''
+    Calcula o máximo da pressão entre o apelido e o nome formal,
+    entre os termos relacionados e a pressão geral
     '''
+
     termos = pop_df
     termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
     termos['max_pressao_rel'] = termos[termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]].max(axis=1)
@@ -107,7 +118,7 @@ def write_csv_popularidade(df_path, export_path):
         print('Pesquisando a popularidade: ' + apelido)
         termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = [unidecode(termo_rel) for termo_rel in termos_relacionados]
-        pop_df = get_all_trends(termos, timeframe)
+        pop_df = get_popularidade(termos, timeframe)
 
         if (pop_df.empty):
             props_sem_popularidade += 1
