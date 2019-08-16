@@ -14,9 +14,3 @@ df_google_trends <-
   slice(n())
 
 write_csv(df_google_trends, "../leggo-trends/apelidos.csv")
-
-# teste <- 
-#   df_google_trends %>% 
-#   group_by(apelido) %>% 
-#   arrange(apelido, apresentacao) %>%  
-#   slice(n())
