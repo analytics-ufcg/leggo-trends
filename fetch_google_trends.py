@@ -115,6 +115,7 @@ def write_csv_popularidade(df_path, export_path):
         apelido = row['apelido'].replace('(', '').replace(')', '')
         nome_formal = row['nome_formal']
         id_ext = str(row['id_ext'])
+        casa = row['casa']
         print('Pesquisando a popularidade: ' + apelido)
         termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = [unidecode(termo_rel) for termo_rel in termos_relacionados]
@@ -126,6 +127,7 @@ def write_csv_popularidade(df_path, export_path):
         else:
             pop_df = calcula_maximos(pop_df, apelido, nome_formal)
             pop_df['id_ext'] = id_ext
+            pop_df['casa'] = casa
             pop_df.to_csv(export_path + 'pop_' + id_ext + '.csv', encoding='utf8')
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
