@@ -61,6 +61,7 @@ def get_popularidade(termo, timeframe):
     '''
 
     get_trends(termo, timeframe)
+
     return pytrend.interest_over_time()
 
 def get_termos_relacionados(termo, timeframe):
@@ -75,6 +76,7 @@ def get_termos_relacionados(termo, timeframe):
         return pd.DataFrame()
 
     related_queries_df = pd.DataFrame.from_dict(related_queries_dict[termo[0]]['top'])[:3]
+
     return related_queries_df
 
 def get_termos_mais_populares(nome_formal, apelido, timeframe):
@@ -89,6 +91,7 @@ def get_termos_mais_populares(nome_formal, apelido, timeframe):
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
     if (len(termos_relacionados_total) > 0):
         termos_relacionados_total = termos_relacionados_total.sort_values(by=['value'], ascending=False)[:3]['query']
+
     return termos_relacionados_total.values.tolist()
 
 def calcula_maximos(pop_df, apelido, nome_formal):
@@ -101,7 +104,20 @@ def calcula_maximos(pop_df, apelido, nome_formal):
     termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
     termos['max_pressao_rel'] = termos[termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]].max(axis=1)
     termos['maximo_geral'] = termos[['max_pressao_rel','max_pressao_principal']].max(axis=1)
+
     return termos
+
+def agrupa_por_semana(pop_df):
+    '''
+    Agrupa por semana começando na segunda e calcula os máximos das colunas
+    '''
+
+    pop_df = pop_df.reset_index()
+    pop_df = pop_df.groupby(['id_ext', pd.Grouper(key='date', freq='W-MON'), 'casa']).agg('max')
+    pop_df = pop_df.reset_index()
+    pop_df['date'] = pd.to_datetime(pop_df['date']) - pd.to_timedelta(7, unit = 'd')
+
+    return pop_df
 
 def write_csv_popularidade(df_path, export_path):
     '''
@@ -112,8 +128,8 @@ def write_csv_popularidade(df_path, export_path):
     apelidos = pd.read_csv(df_path, encoding='utf-8')
     for index, row in apelidos.iterrows():
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
-        apelido = row['apelido'].replace('(', '').replace(')', '')
-        nome_formal = row['nome_formal']
+        apelido = 'PL do Veneno'
+        nome_formal = 'PL 6299/2002'
         id_ext = str(row['id_ext'])
         casa = row['casa']
         print('Pesquisando a popularidade: ' + apelido)
@@ -128,6 +144,7 @@ def write_csv_popularidade(df_path, export_path):
             pop_df = calcula_maximos(pop_df, apelido, nome_formal)
             pop_df['id_ext'] = id_ext
             pop_df['casa'] = casa
+            pop_df = agrupa_por_semana(pop_df)
             pop_df.to_csv(export_path + 'pop_' + id_ext + '.csv', encoding='utf8')
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
