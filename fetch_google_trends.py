@@ -89,7 +89,8 @@ def calcula_maximos(pop_df, apelido, nome_formal):
 
     termos = pop_df
     termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
-    termos['max_pressao_rel'] = termos[termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]].max(axis=1)
+    cols_termos_relacionados = termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]
+    termos['max_pressao_rel'] = termos[cols_termos_relacionados].max(axis=1) if (len(cols_termos_relacionados) > 0) else 0
     termos['maximo_geral'] = termos[['max_pressao_rel','max_pressao_principal']].max(axis=1)
 
     return termos
