@@ -103,86 +103,111 @@ comparacao_agenda_nacional <- read_csv("../data/temas/agenda_nacional/comparacao
 
 ```
 
+```{r, message=FALSE}
+formata_para_visualizacao_semana_anterior_semana_posterior <- function(df_apelido) {
+  semana_apelido <- df_apelido %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(apelido, semana) %>% 
+  summarise(pop_semana = max(pop))
+
+semana_apelido %>% 
+  arrange(desc(semana)) %>% 
+  head(2) %>% 
+  arrange(apelido, semana) %>% 
+  mutate(pop_ant = lag(pop_semana)) %>% 
+  arrange(desc(semana))
+}
+
+create_grafico_semana_anterior_semana_posterior <- function(data, prop_maximo) {
+  ggplot(data=data,aes(x=apelido, y=pop_semana))+
+  geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
+  geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
+  geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.5, fill='red', width = 0.2) +
+  coord_cartesian(ylim = c(0, 100)) +
+  xlab("Apelido") + 
+  ylab("Pressão") +
+  ggplot2::ggtitle("Pressão Recente") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+
+  theme_minimal() +
+  annotate("text", x=1, 
+           y= 95, label = format(as.Date(prop_maximo$date), "%d/%m/%Y"))
+}
+```
+
 
 ##Pressão Recente
 
 Abaixo podemos visualizar a pressão atual e da semana anterior para duas proposições:
+A pressão é a quantidade de pesquisas realizadas no Google sobre a proposição.
 
 ###PEC 06/2019 - Nova Previdência
 
 ```{r fig.align='center'}
 
-semana_apelido_previdencia <- previdencia_apelido %>% 
-  mutate(semana = epiweek(date)) %>% 
-  group_by(apelido, semana) %>% 
-  summarise(pop_semana = max(pop))
-
-atual_popularidade_previdencia <- semana_apelido_previdencia %>% 
-  arrange(desc(semana)) %>% 
-  head(2) %>% 
-  arrange(apelido, semana) %>% 
-  mutate(pop_ant = lag(pop_semana)) %>% 
-  arrange(desc(semana))
+atual_popularidade_previdencia <- formata_para_visualizacao_semana_anterior_semana_posterior(previdencia_apelido)
 
 prop_maximo <- previdencia_apelido %>% 
   filter(pop == 100)
 
-p <- ggplot(data=atual_popularidade_previdencia,aes(x=apelido, y=pop_semana))+
-  geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
-  geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
-  geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.5, fill='red', width = 0.2) +
-  coord_cartesian(ylim = c(0, 100)) +
-  xlab("Apelido") + 
-  ylab("Pressão") +
-  ggplot2::ggtitle("Pressão Recente") +
-  scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal() +
-  annotate("text", x=1, 
-           y= 95, label = format(as.Date(prop_maximo$date), "%d/%m/%Y"))
-
+p <- create_grafico_semana_anterior_semana_posterior(atual_popularidade_previdencia, prop_maximo)
 ggplotly(p)
 ```
 
+A Pressão da semana anterior é a vermelha escura e a pressão da semana atual é a cor de rosa mais larga (as larguras das barras não indicam nenhuma informção relevantes, servem exclusivamente para indicar quem está na frente e quem está atrás).
 Como podemos perceber, a pressão externa da Reforma da Previdência caiu na última semana.
 
 ###MPV 881/2019 - Liberdade Econômica
 
 ```{r fig.align='center'}
-
-semana_apelido_lib_economica <- liberdade_economica_apelido %>% 
-  mutate(semana = epiweek(date)) %>% 
-  group_by(apelido, semana) %>% 
-  summarise(pop_semana = max(pop))
-
-atual_popularidade_lib_economica <- semana_apelido_lib_economica %>% 
-  arrange(desc(semana)) %>% 
-  head(2) %>% 
-  arrange(apelido, semana) %>% 
-  mutate(pop_ant = lag(pop_semana)) %>% 
-  arrange(desc(semana))
+atual_popularidade_lib_economica <- formata_para_visualizacao_semana_anterior_semana_posterior(liberdade_economica_apelido)
 
 prop_maximo <- liberdade_economica_apelido %>% 
   filter(pop == 100)
 
-p <- ggplot(data=atual_popularidade_lib_economica,aes(x=apelido, y=pop_semana))+
-  geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
-  geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
-  geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.5, fill='red', width = 0.2) +
-  coord_cartesian(ylim = c(0, 100)) +
-  xlab("Apelido") + 
-  ylab("Pressão") +
-  ggplot2::ggtitle("Pressão Recente") +
-  scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal() +
-  annotate("text", x=1, 
-           y= 95, label = format(as.Date(prop_maximo$date), "%d/%m/%Y"))
+p <- create_grafico_semana_anterior_semana_posterior(atual_popularidade_lib_economica, prop_maximo)
 
 ggplotly(p)
 ```
 
+A Pressão da semana anterior é a vermelha escura e a pressão da semana atual é a cor de rosa mais larga (as larguras das barras não indicam nenhuma informção relevantes, servem exclusivamente para indicar quem está na frente e quem está atrás).
 Como podemos perceber, a pressão externa da MPV da Liberdade Econômica também caiu na última semana.
 
 ##Evolução da Pressão
+```{r, message=FALSE}
+create_grafico_temporal_formal <- function(semana, cor, titulo) {
+semana %>%  ggplot() + 
+  geom_area(aes(x=segunda, y = pop_semana), fill = cor) +
+  xlab("Semana") + 
+  ylab("Pressão") +
+  ggtitle(titulo) +
+  scale_x_date(date_labels = "%d-%m-%Y") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+
+  theme_minimal()
+}
+
+create_grafico_temporal_apeido <- function(data, cor, titulo) {
+  data %>%  ggplot() + 
+  geom_area(aes(x=as.Date(periodo), y = temperatura_recente), fill = cor) +
+  xlab("Semana") + 
+  ylab("Temperatura") +
+  ggtitle(titulo) +
+  scale_x_date(date_labels = "%d-%m-%Y") +
+  theme_minimal()
+}
+
+create_graphic_comparativo <- function(data, titulo) {
+data %>% group_by(semana, nome_prop) %>%  ggplot() + 
+  geom_area(aes(x=segunda, y = pop, fill = nome_prop), show.legend = FALSE) +
+  xlab("Semana") + 
+  ylab("Pressão") +
+  ggtitle(titulo) +
+  scale_x_date(date_labels = "%d-%m-%Y") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  theme_minimal() +
+  facet_grid(rows = vars(nome_prop)) 
+}
+
+```
 
 
 ###PEC 06/2019 - Nova previdência
@@ -194,38 +219,28 @@ semana <- previdencia_apelido %>%
   summarise(pop_semana = max(pop)) %>% 
   mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
   
-p <- semana %>%  ggplot() + 
-  geom_area(aes(x=segunda, y = pop_semana), fill = "#FF7700") +
-  xlab("Semana") + 
-  ylab("Pressão") +
-  ggtitle("Evolução da pressão da PEC 06/2019 - Nova previdência") +
-  scale_x_date(date_labels = "%d-%m-%Y") +
-  scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal()
+
+p <- create_grafico_temporal_formal(semana,  "#FF7700", "Evolução da pressão da PEC 06/2019 - Nova previdência")
 ggplotly(p)
 ```
 
-**Pico semana 18/02:** Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
+**Pico semana 18/02:** Causa: Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
 
-**Pico semana 18/03:** [Reforma dos militares](https://economia.uol.com.br/noticias/redacao/2019/03/20/governo-entrega-proposta-militares-reforma-previdencia-aposentadoria.htm) 
+**Pico semana 18/03:** Causa: [Reforma dos militares](https://economia.uol.com.br/noticias/redacao/2019/03/20/governo-entrega-proposta-militares-reforma-previdencia-aposentadoria.htm) 
 
-**Pico semana 22/04:** [Aprovação CCJ](https://g1.globo.com/politica/noticia/2019/04/23/ccj-da-camara-da-aval-a-reforma-da-previdencia-e-texto-segue-para-comissao-especial.ghtml)
+**Pico semana 22/04:** Causa: [Aprovação CCJ](https://g1.globo.com/politica/noticia/2019/04/23/ccj-da-camara-da-aval-a-reforma-da-previdencia-e-texto-segue-para-comissao-especial.ghtml)
 
-**Pico semana 08/07:** Votação em primeiro turno no plenário da câmara.
+**Pico semana 08/07:** Causa: Votação em primeiro turno no plenário da câmara.
 
-**Queda acentuada semana 15/07:** Recesso parlamentar
+**Queda acentuada semana 15/07:** Causa: Recesso parlamentar
+
 
 ```{r}
 hist_previdencia <- hist_temp_por_id %>% 
   filter(apelido == "Nova Previdência")
   
-p <- hist_previdencia %>%  ggplot() + 
-  geom_area(aes(x=as.Date(periodo), y = temperatura_recente), fill = "#dc6060") +
-  xlab("Semana") + 
-  ylab("Temperatura") +
-  ggtitle("Evolução da Temperatura da PEC 06/2019 - Nova previdência") +
-  scale_x_date(date_labels = "%d-%m-%Y") +
-  theme_minimal()
+p <- create_grafico_temporal_apeido(hist_previdencia, "#dc6060", "Evolução da Temperatura da PEC 06/2019 - Nova previdência") 
+
 ggplotly(p)
 ```
 
@@ -239,39 +254,27 @@ semana <- liberdade_economica_apelido %>%
   summarise(pop_semana = max(pop)) %>% 
   mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
   
-p <- semana %>%  ggplot() + 
-  geom_area(aes(x=segunda, y = pop_semana), fill = "#7678ED") +
-  xlab("Semana") + 
-  ylab("Pressão") +
-  ggtitle("Evolução da pressão da MPV 881/2019") +
-  scale_x_date(date_labels = "%d-%m-%Y") +
-  scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal()
+p <- create_grafico_temporal_formal(semana, "#7678ED", "Evolução da pressão da MPV 881/2019") 
 
 ggplotly(p)
 
 ```
 
-**Pico semana 29/04:** [Bolsonaro assina mp](https://www.gazetadopovo.com.br/republica/mp-da-liberdade-economica/)
+**Pico semana 29/04:** Causa: [Bolsonaro assina mp](https://www.gazetadopovo.com.br/republica/mp-da-liberdade-economica/)
 
-**Pico semana 06/10:** Houve algumas notícias sobre a previdência [OGlobo](https://oglobo.globo.com/economia/governo-dispensa-287-tipos-de-empresas-de-alvaras-de-funcionamento-23735455)
+**Pico semana 06/10:** Causa: Houve algumas notícias sobre a previdência [OGlobo](https://oglobo.globo.com/economia/governo-dispensa-287-tipos-de-empresas-de-alvaras-de-funcionamento-23735455)
 
-**Pico emana 08/07:** Aprovação na Comissão Mista
+**Pico emana 08/07:** Causa: Aprovação na Comissão Mista
 
-**Pico emana 05/08:** [Novo texto](https://exame.abril.com.br/economia/novo-texto-da-mp-da-liberdade-economica-inclui-trabalho-aos-domingos/)
+**Pico emana 05/08:** Causa: [Novo texto](https://exame.abril.com.br/economia/novo-texto-da-mp-da-liberdade-economica-inclui-trabalho-aos-domingos/)
 
 ```{r}
 hist_lib_economica <- hist_temp_por_id %>% 
   filter(apelido == "Liberdade Econômica",
          id_ext == 136531) 
   
-p <- hist_lib_economica %>%  ggplot() + 
-  geom_area(aes(x=as.Date(periodo), y = temperatura_recente), fill = "#dc6060") +
-  xlab("Semana") + 
-  ylab("Temperatura") +
-  ggtitle("Evolução da Temperatura da MPV 881/2019 - Liberdade Econômica") +
-  scale_x_date(date_labels = "%d-%m-%Y") +
-  theme_minimal()
+p <- create_grafico_temporal_apeido(hist_lib_economica, "#dc6060", "Evolução da Temperatura da MPV 881/2019 - Liberdade Econômica") 
+
 ggplotly(p)
 ```
 
@@ -285,22 +288,15 @@ semana <- mercado_agua_nome_formal %>%
   summarise(pop_semana = max(pop)) %>% 
   mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
 
-p <- semana %>%  ggplot() + 
-  geom_area(aes(x=segunda, y = pop_semana), fill = "#BFACAA") +
-  xlab("Semana") + 
-  ylab("Pressão") +
-  ggtitle("Evolução da pressão da PLS 495/2017") +
-  scale_x_date(date_labels = "%d-%m-%Y") +
-  scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal()
+p <-create_grafico_temporal_formal(semana, "#BFACAA", "Evolução da pressão da PLS 495/2017")
 
 ggplotly(p)
 
 ```
 
-**Pico semana 20/05:** Não conseguimos explicar
+**Pico semana 20/05:** Causa: Não conseguimos explicar
 
-**Pico semana 15/07:** ["Consulta pública sobre venda do aquífero Guarani"](https://www1.folha.uol.com.br/poder/2019/07/nao-existe-consulta-publica-sobre-venda-do-aquifero-guarani-nem-bolsonaro-e-guedes-estao-envolvidos.shtml)
+**Pico semana 15/07:** Causa: ["Consulta pública sobre venda do aquífero Guarani"](https://www1.folha.uol.com.br/poder/2019/07/nao-existe-consulta-publica-sobre-venda-do-aquifero-guarani-nem-bolsonaro-e-guedes-estao-envolvidos.shtml)
 
 Postagem falsa liga governo a PL de 2017 e que não se refere à venda do aquífero Guarani
 
@@ -308,13 +304,8 @@ Postagem falsa liga governo a PL de 2017 e que não se refere à venda do aquíf
 hist_mercado_agua <- hist_temp_por_id %>% 
   filter(apelido == "Mercado da água")
   
-p <- hist_mercado_agua %>%  ggplot() + 
-  geom_area(aes(x=as.Date(periodo), y = temperatura_recente), fill = "#dc6060") +
-  xlab("Semana") + 
-  ylab("Temperatura") +
-  ggtitle("Evolução da Temperatura da PLS 495/2017 - Mercado da Água") +
-  scale_x_date(date_labels = "%d-%m-%Y") +
-  theme_minimal()
+p <- create_grafico_temporal_apeido(hist_mercado_agua, "#dc6060", "Evolução da Temperatura da PLS 495/2017 - Mercado da Água") 
+
 ggplotly(p)
 ```
 
@@ -341,16 +332,7 @@ semana_comp_nf <- semana_comp %>%
 
 semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
 
-p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() + 
-  geom_area(aes(x=segunda, y = pop, fill = nome_prop)) +
-  xlab("Semana") + 
-  ylab("Pressão") +
-  ggtitle("Comparação da evolução da pressão - PEC: Apelido vs Nome formal") +
-  scale_x_date(date_labels = "%d-%m-%Y") +
-  scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal() +
-  facet_grid(rows = vars(nome_prop)) 
-  
+p <- create_graphic_comparativo(semana_comp, "Comparação da evolução da pressão - PEC: Apelido vs Nome formal")
 
 ggplotly(hide_legend(p))
 
@@ -385,17 +367,9 @@ semana_comp_nf <- semana_comp %>%
 
 semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
 
-p <- semana_comp %>% group_by(semana, nome_prop) %>%  ggplot() + 
-  geom_area(aes(x=segunda, y = pop, fill = nome_prop), show.legend = FALSE) +
-  xlab("Semana") + 
-  ylab("Pressão") +
-  ggtitle("Comparação da evolução da pressão - MPV: Apelido vs Nome formal") +
-  scale_x_date(date_labels = "%d-%m-%Y") +
-  scale_y_continuous(labels = function(x) paste0(x, "%")) +
-  theme_minimal() +
-  facet_grid(rows = vars(nome_prop)) 
-  
+p <- create_graphic_comparativo(semana_comp, "Comparação da evolução da pressão - MPV: Apelido vs Nome formal")
+
 ggplotly(hide_legend(p))
 ```
-**Pico semana 29/04:** Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
+**Pico semana 29/04:** Causa: Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
 
