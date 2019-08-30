@@ -195,7 +195,27 @@ create_grafico_temporal_apeido <- function(data, cor, titulo) {
   theme_minimal()
 }
 
-create_graphic_comparativo <- function(data, titulo) {
+formata_data_comparativo <- function(data, apelido, nome_formal) {
+  semana_comp <- data %>% 
+  mutate(semana = epiweek(date)) %>% 
+  group_by(semana) %>% 
+  summarise(pop_semana_nf = max(pop_nome_formal),
+            pop_semana_ap = max(pop_apelido))
+
+semana_comp_ap <- semana_comp %>% 
+  select(pop = pop_semana_ap, semana) %>% 
+  mutate(nome_prop = apelido)  %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
+
+semana_comp_nf <- semana_comp %>% 
+  select(pop = pop_semana_nf, semana) %>% 
+  mutate(nome_prop = nome_formal) %>% 
+  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
+
+bind_rows(semana_comp_ap, semana_comp_nf)
+}
+
+create_grafico_comparativo <- function(data, titulo) {
 data %>% group_by(semana, nome_prop) %>%  ggplot() + 
   geom_area(aes(x=segunda, y = pop, fill = nome_prop), show.legend = FALSE) +
   xlab("Semana") + 
@@ -313,26 +333,9 @@ ggplotly(p)
 
 ```{r}
 # Comparação entre nome formal e apelido
-semana_comp <- previdencia_comparacao %>% 
-  mutate(semana = epiweek(date)) %>% 
-  group_by(semana) %>% 
-  summarise(pop_semana_nf = max(pop_nome_formal),
-            pop_semana_ap = max(pop_apelido))
+semana_comp <- formata_data_comparativo(previdencia_comparacao, "nova previdência", "pec 06/2019") 
 
-semana_comp_ap <- semana_comp %>% 
-  select(pop = pop_semana_ap, semana) %>% 
-  mutate(nome_prop = "nova previdência") %>% 
-  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
-
-
-semana_comp_nf <- semana_comp %>% 
-  select(pop = pop_semana_nf, semana) %>% 
-  mutate(nome_prop = "pec 06/2019") %>% 
-  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
-
-semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
-
-p <- create_graphic_comparativo(semana_comp, "Comparação da evolução da pressão - PEC: Apelido vs Nome formal")
+p <- create_grafico_comparativo(semana_comp, "Comparação da evolução da pressão - PEC: Apelido vs Nome formal")
 
 ggplotly(hide_legend(p))
 
@@ -349,25 +352,10 @@ Como podemos perceber, existem apelidos mais populares (maior pressão) para a R
 
 ```{r}
 # Comparação entre nome formal e apelido
-semana_comp <- liberdade_economica_comparacao %>% 
-  mutate(semana = epiweek(date)) %>% 
-  group_by(semana) %>% 
-  summarise(pop_semana_nf = max(pop_nome_formal),
-            pop_semana_ap = max(pop_apelido))
 
-semana_comp_ap <- semana_comp %>% 
-  select(pop = pop_semana_ap, semana) %>% 
-  mutate(nome_prop = "liberdade econômica")  %>% 
-  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
+semana_comp <- formata_data_comparativo(liberdade_economica_comparacao, "liberdade econômica", "mpv 881/2019") 
 
-semana_comp_nf <- semana_comp %>% 
-  select(pop = pop_semana_nf, semana) %>% 
-  mutate(nome_prop = "mpv 881/2019") %>% 
-  mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
-
-semana_comp <- bind_rows(semana_comp_ap, semana_comp_nf)
-
-p <- create_graphic_comparativo(semana_comp, "Comparação da evolução da pressão - MPV: Apelido vs Nome formal")
+p <- create_grafico_comparativo(semana_comp, "Comparação da evolução da pressão - MPV: Apelido vs Nome formal")
 
 ggplotly(hide_legend(p))
 ```
