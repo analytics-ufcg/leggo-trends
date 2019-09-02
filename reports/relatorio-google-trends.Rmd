@@ -41,13 +41,8 @@ props_nome_formal <- bind_rows(previdencia_nome_formal,
                                liberdade_economica_nome_formal,
                                mercado_agua_nome_formal)
 
-hist_temperatura <- read_csv('../data/novo_historico_temperatura.csv')
-  
 leggo_ids <- read_csv('../data/leggo_ids.csv')
 
-hist_temp_por_id <- merge(hist_temperatura, leggo_ids, by="id_leggo") %>% 
-  filter(periodo >= lubridate::ymd('2019-02-12'),
-         periodo <= lubridate::ymd('2019-08-09'))
 ```
 
 
@@ -134,11 +129,13 @@ create_grafico_semana_anterior_semana_posterior <- function(data, prop_maximo) {
 }
 ```
 
+Nesta análise estavamos interessados na popularidade de algumas proposições. Utilizamos, então, o Google Trends — ferramenta do Google que fornece dados sobre pesquisa de termos no buscador — para investigar o interesse das pessoas nessas proposições. Traduzimos esse interesse para 'Pressão Externa' ou só 'Pressão', utilizando-a como amostra da pressão exercida pela população.
 
 ##Pressão Recente
 
-Abaixo podemos visualizar a pressão atual e da semana anterior para duas proposições:
-A pressão é a quantidade de pesquisas realizadas no Google sobre a proposição.
+Abaixo podemos visualizar a pressão atual e da semana anterior para duas proposições.
+
+A Pressão da semana atual é a vermelha escura e a pressão da semana anterior é a cor de rosa mais larga (a largura das barras serve exclusivamente para indicar a sobreposição), enquanto a maior pressão alcançada é representada pela barra cinza.
 
 ###PEC 06/2019 - Nova Previdência
 
@@ -153,8 +150,7 @@ p <- create_grafico_semana_anterior_semana_posterior(atual_popularidade_previden
 ggplotly(p)
 ```
 
-A Pressão da semana anterior é a vermelha escura e a pressão da semana atual é a cor de rosa mais larga (as larguras das barras não indicam nenhuma informção relevantes, servem exclusivamente para indicar quem está na frente e quem está atrás).
-Como podemos perceber, a pressão externa da Reforma da Previdência caiu na última semana.
+Como podemos perceber, a pressão externa da Reforma da Previdência subiu na última semana.
 
 ###MPV 881/2019 - Liberdade Econômica
 
@@ -169,10 +165,12 @@ p <- create_grafico_semana_anterior_semana_posterior(atual_popularidade_lib_econ
 ggplotly(p)
 ```
 
-A Pressão da semana anterior é a vermelha escura e a pressão da semana atual é a cor de rosa mais larga (as larguras das barras não indicam nenhuma informção relevantes, servem exclusivamente para indicar quem está na frente e quem está atrás).
-Como podemos perceber, a pressão externa da MPV da Liberdade Econômica também caiu na última semana.
+Como podemos perceber, a pressão externa da MPV da Liberdade Econômica também subiu na última semana.
 
 ##Evolução da Pressão
+
+Adiante, analisamos o histórico da pressão ao longo dos 6 últimos meses e tentamos mapear seus picos e quedas acentuadas em acontecimentos contemporâneos.
+
 ```{r, message=FALSE}
 create_grafico_temporal_formal <- function(semana, cor, titulo) {
 semana %>%  ggplot() + 
@@ -244,25 +242,16 @@ p <- create_grafico_temporal_formal(semana,  "#FF7700", "Evolução da pressão 
 ggplotly(p)
 ```
 
-**Pico semana 18/02:** Causa: Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
+**Pico semana 18/02:** Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
 
-**Pico semana 18/03:** Causa: [Reforma dos militares](https://economia.uol.com.br/noticias/redacao/2019/03/20/governo-entrega-proposta-militares-reforma-previdencia-aposentadoria.htm) 
+**Pico semana 18/03:** [Reforma dos militares](https://economia.uol.com.br/noticias/redacao/2019/03/20/governo-entrega-proposta-militares-reforma-previdencia-aposentadoria.htm) 
 
-**Pico semana 22/04:** Causa: [Aprovação CCJ](https://g1.globo.com/politica/noticia/2019/04/23/ccj-da-camara-da-aval-a-reforma-da-previdencia-e-texto-segue-para-comissao-especial.ghtml)
+**Pico semana 22/04:** [Aprovação CCJ](https://g1.globo.com/politica/noticia/2019/04/23/ccj-da-camara-da-aval-a-reforma-da-previdencia-e-texto-segue-para-comissao-especial.ghtml)
 
-**Pico semana 08/07:** Causa: Votação em primeiro turno no plenário da câmara.
+**Pico semana 08/07:** Votação em primeiro turno no plenário da câmara.
 
-**Queda acentuada semana 15/07:** Causa: Recesso parlamentar
+**Queda acentuada semana 15/07:** Recesso parlamentar
 
-
-```{r}
-hist_previdencia <- hist_temp_por_id %>% 
-  filter(apelido == "Nova Previdência")
-  
-p <- create_grafico_temporal_apeido(hist_previdencia, "#dc6060", "Evolução da Temperatura da PEC 06/2019 - Nova previdência") 
-
-ggplotly(p)
-```
 
 ###MPV 881/2019 - Liberdade Econômica
 
@@ -280,23 +269,14 @@ ggplotly(p)
 
 ```
 
-**Pico semana 29/04:** Causa: [Bolsonaro assina mp](https://www.gazetadopovo.com.br/republica/mp-da-liberdade-economica/)
+**Pico semana 29/04:** [Bolsonaro assina mp](https://www.gazetadopovo.com.br/republica/mp-da-liberdade-economica/)
 
-**Pico semana 06/10:** Causa: Houve algumas notícias sobre a previdência [OGlobo](https://oglobo.globo.com/economia/governo-dispensa-287-tipos-de-empresas-de-alvaras-de-funcionamento-23735455)
+**Pico semana 06/10:** Houve algumas notícias sobre a previdência [OGlobo](https://oglobo.globo.com/economia/governo-dispensa-287-tipos-de-empresas-de-alvaras-de-funcionamento-23735455)
 
-**Pico emana 08/07:** Causa: Aprovação na Comissão Mista
+**Pico semana 08/07:** Aprovação na Comissão Mista
 
-**Pico emana 05/08:** Causa: [Novo texto](https://exame.abril.com.br/economia/novo-texto-da-mp-da-liberdade-economica-inclui-trabalho-aos-domingos/)
+**Pico semana 05/08:** [Novo texto](https://exame.abril.com.br/economia/novo-texto-da-mp-da-liberdade-economica-inclui-trabalho-aos-domingos/)
 
-```{r}
-hist_lib_economica <- hist_temp_por_id %>% 
-  filter(apelido == "Liberdade Econômica",
-         id_ext == 136531) 
-  
-p <- create_grafico_temporal_apeido(hist_lib_economica, "#dc6060", "Evolução da Temperatura da MPV 881/2019 - Liberdade Econômica") 
-
-ggplotly(p)
-```
 
 ###PLS 495/2017 - Mercado da Água
 
@@ -314,20 +294,11 @@ ggplotly(p)
 
 ```
 
-**Pico semana 20/05:** Causa: Não conseguimos explicar
+**Pico semana 20/05:** Não conseguimos mapear
 
-**Pico semana 15/07:** Causa: ["Consulta pública sobre venda do aquífero Guarani"](https://www1.folha.uol.com.br/poder/2019/07/nao-existe-consulta-publica-sobre-venda-do-aquifero-guarani-nem-bolsonaro-e-guedes-estao-envolvidos.shtml)
+**Pico semana 15/07:** ["Consulta pública sobre venda do aquífero Guarani"](https://www1.folha.uol.com.br/poder/2019/07/nao-existe-consulta-publica-sobre-venda-do-aquifero-guarani-nem-bolsonaro-e-guedes-estao-envolvidos.shtml)
 
 Postagem falsa liga governo a PL de 2017 e que não se refere à venda do aquífero Guarani
-
-```{r}
-hist_mercado_agua <- hist_temp_por_id %>% 
-  filter(apelido == "Mercado da água")
-  
-p <- create_grafico_temporal_apeido(hist_mercado_agua, "#dc6060", "Evolução da Temperatura da PLS 495/2017 - Mercado da Água") 
-
-ggplotly(p)
-```
 
 ##Fonte da Pressão: Nome Formal vs. Apelido
 
@@ -344,8 +315,9 @@ ggplotly(hide_legend(p))
 ###Comparação entre termos comuns para PEC 06/2019
 
 <div style="width:1000px">
-![](previdencia.png)
+![Captura de tela](previdencia.png)
 </div>
+
 
 Como podemos perceber, existem apelidos mais populares (maior pressão) para a Reforma da Previdência, mas cujo comportamento da curva é o mesmo.
 
@@ -359,5 +331,5 @@ p <- create_grafico_comparativo(semana_comp, "Comparação da evolução da pres
 
 ggplotly(hide_legend(p))
 ```
-**Pico semana 29/04:** Causa: Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
+**Pico semana 29/04:** Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
 
