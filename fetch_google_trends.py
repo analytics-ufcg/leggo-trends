@@ -7,19 +7,6 @@ from datetime import timedelta
 from unidecode import unidecode
 import sys
 
-# Argumentos que o programa deve receber:
-# -1º: Path para o arquivo onde estão os apelidos, nomes formais e datas de apresentações
-# -2º: Path para a pasta onde as tabelas de popularidades devem ser salvas
-
-if len(sys.argv) != 3:
-    print_usage()
-    exit(1)
-
-df_path = sys.argv[1]
-export_path = sys.argv[2]
-
-pytrend = TrendReq()
-
 def print_usage():
     '''
     Função que printa a chamada correta em caso de o usuário passar o número errado
@@ -102,7 +89,8 @@ def calcula_maximos(pop_df, apelido, nome_formal):
 
     termos = pop_df
     termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
-    termos['max_pressao_rel'] = termos[termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]].max(axis=1)
+    cols_termos_relacionados = termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]
+    termos['max_pressao_rel'] = termos[cols_termos_relacionados].max(axis=1) if (len(cols_termos_relacionados) > 0) else 0
     termos['maximo_geral'] = termos[['max_pressao_rel','max_pressao_principal']].max(axis=1)
 
     return termos
@@ -128,17 +116,20 @@ def write_csv_popularidade(df_path, export_path):
     apelidos = pd.read_csv(df_path, encoding='utf-8')
     for index, row in apelidos.iterrows():
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
-        apelido = 'PL do Veneno'
-        nome_formal = 'PL 6299/2002'
+        apelido = row['apelido'].replace('(', '').replace(')', '')
+        nome_formal = row['nome_formal']
         id_ext = str(row['id_ext'])
         casa = row['casa']
+
         print('Pesquisando a popularidade: ' + apelido)
+
         termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = [unidecode(termo_rel) for termo_rel in termos_relacionados]
         pop_df = get_popularidade(termos, timeframe)
 
         if (pop_df.empty):
             props_sem_popularidade += 1
+
             print ('O Google nao retornou nenhum dado sobre: ' + apelido)
         else:
             pop_df = calcula_maximos(pop_df, apelido, nome_formal)
@@ -149,4 +140,18 @@ def write_csv_popularidade(df_path, export_path):
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
 
-write_csv_popularidade(df_path, export_path)
+if __name__ == "__main__":
+    # Argumentos que o programa deve receber:
+    # -1º: Path para o arquivo onde estão os apelidos, nomes formais e datas de apresentações
+    # -2º: Path para a pasta onde as tabelas de popularidades devem ser salvas
+	
+    if len(sys.argv) != 3:
+        print_usage()
+        exit(1)
+
+    df_path = sys.argv[1]
+    export_path = sys.argv[2]
+
+    pytrend = TrendReq()
+
+    write_csv_popularidade(df_path, export_path)
