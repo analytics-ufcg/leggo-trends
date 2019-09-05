@@ -14,7 +14,7 @@ Caso seja a primeira vez:
 docker-compose run trends
 ```
 
-Caso faça alteraçes nos scripts:
+Caso faça alteraçôes nos scripts:
 
 ```
 docker-compose build
