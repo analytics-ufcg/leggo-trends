@@ -1,0 +1,11 @@
+# Compose used for production
+
+version: '3.5'
+
+services:
+ trends:
+   build:
+     context: ./
+     dockerfile: ./Dockerfile
+   volumes:
+     - ../leggo-backend/data/pops:/pops

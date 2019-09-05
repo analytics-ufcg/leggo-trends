@@ -154,4 +154,6 @@ if __name__ == "__main__":
 
     pytrend = TrendReq()
 
+
     write_csv_popularidade(df_path, export_path)
+
