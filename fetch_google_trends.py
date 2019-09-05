@@ -145,7 +145,7 @@ if __name__ == "__main__":
     # Argumentos que o programa deve receber:
     # -1º: Path para o arquivo onde estão os apelidos, nomes formais e datas de apresentações
     # -2º: Path para a pasta onde as tabelas de popularidades devem ser salvas
-	
+
     if len(sys.argv) != 3:
         print_usage()
         exit(1)
@@ -155,4 +155,6 @@ if __name__ == "__main__":
 
     pytrend = TrendReq()
 
+
     write_csv_popularidade(df_path, export_path)
+
