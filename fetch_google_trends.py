@@ -125,7 +125,8 @@ def write_csv_popularidade(df_path, export_path):
 
         termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = [unidecode(termo_rel) for termo_rel in termos_relacionados]
-        pop_df = get_popularidade(termos, timeframe)
+        termos = set(termos)
+        pop_df = get_popularidade(list(termos), timeframe)
 
         if (pop_df.empty):
             props_sem_popularidade += 1
