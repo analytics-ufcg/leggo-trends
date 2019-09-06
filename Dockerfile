@@ -7,4 +7,4 @@ RUN R -e "install.packages('lubridate',dependencies=TRUE, repos='http://cran.rst
 RUN pip3 install pandas
 RUN pip install git+https://github.com/musaprg/pytrends
 RUN pip install unidecode
-CMD Rscript gera_entrada_google_trends.R && python fetch_google_trends.py data/apelidos.csv data/pops/
+CMD Rscript gera_entrada_google_trends.R -p exported/proposicoes.csv -a exported/apelidos.csv && python fetch_google_trends.py data/apelidos.csv data/pops/
