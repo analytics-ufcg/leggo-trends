@@ -1,7 +1,7 @@
 library(tidyverse)
 library(lubridate)
 
-proposicao <- read_csv("../leggo-backend/data/proposicoes.csv")
+proposicao <- read_csv("data/proposicoes.csv")
 
 df_google_trends <- 
   proposicao %>% 
@@ -13,4 +13,4 @@ df_google_trends <-
   arrange(apelido, apresentacao) %>%  
   slice(n())
 
-write_csv(df_google_trends, "../leggo-trends/apelidos.csv")
+write_csv(df_google_trends, "data/apelidos.csv")

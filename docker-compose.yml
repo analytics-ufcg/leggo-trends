@@ -3,9 +3,10 @@
 version: '3.5'
 
 services:
- trends:
+ leggo-trends:
+   image: leggo/leggo-trends
    build:
      context: ./
      dockerfile: ./Dockerfile
    volumes:
-     - ../leggo-backend/data/pops:/pops
+     - ../leggo-backend/data/:/leggo-trends/data

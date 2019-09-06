@@ -1,7 +1,10 @@
 FROM python:3.6
+WORKDIR leggo-trends
 COPY . .
-ADD fetch_google_trends.py /
+RUN apt-get update && apt-get install -y r-base
+RUN R -e "install.packages('tidyverse',dependencies=TRUE, repos='http://cran.rstudio.com/')" 
+RUN R -e "install.packages('lubridate',dependencies=TRUE, repos='http://cran.rstudio.com/')" 
 RUN pip3 install pandas
 RUN pip install git+https://github.com/musaprg/pytrends
 RUN pip install unidecode
-CMD [ "python", "./fetch_google_trends.py", "./data/apelidos.csv", "./pops/"]
+CMD Rscript gera_entrada_google_trends.R && python fetch_google_trends.py data/apelidos.csv data/pops/
