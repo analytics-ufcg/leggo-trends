@@ -9,4 +9,10 @@ services:
      context: ./
      dockerfile: ./Dockerfile
    volumes:
-     - ../leggo-backend/data/:/leggo-trends/data
+     - proposicoes_data:/leggo-trends/data
+
+volumes:
+  proposicoes_data:
+    external:
+      name: back_proposicoes_data
+
