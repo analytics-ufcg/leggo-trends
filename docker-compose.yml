@@ -3,9 +3,16 @@
 version: '3.5'
 
 services:
- trends:
+ leggo-trends:
+   image: agoradigital/leggo-trends
    build:
      context: ./
      dockerfile: ./Dockerfile
    volumes:
-     - ../leggo-backend/data/pops:/pops
+     - proposicoes_data:/leggo-trends/data
+
+volumes:
+  proposicoes_data:
+    external:
+      name: back_proposicoes_data
+
