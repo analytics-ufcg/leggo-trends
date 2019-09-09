@@ -129,15 +129,15 @@ create_grafico_semana_anterior_semana_posterior <- function(data, prop_maximo) {
 }
 ```
 
-Nesta análise estavamos interessados na popularidade de algumas proposições. Utilizamos, então, o Google Trends — ferramenta do Google que fornece dados sobre pesquisa de termos no buscador — para investigar o interesse das pessoas nessas proposições. Traduzimos esse interesse para 'Pressão Externa' ou só 'Pressão', utilizando-a como amostra da pressão exercida pela população.
+Nesta análise estavamos interessados na popularidade de algumas proposições. Utilizamos, então, o Google Trends — ferramenta do Google que fornece dados sobre pesquisa de termos no buscador — para investigar o interesse das pessoas nessas proposições. Traduzimos esse interesse para 'Pressão Externa' ou só 'Pressão', utilizando-a como amostra da pressão exercida pela população. Note que alguns dos termos que utilizamos aqui e que chamamos de "Apelido" não são oficiais e não refletem a popularidade de outros termos que referenciam a mesma proposição.
 
-##Pressão Recente
+## Pressão Recente
 
 Abaixo podemos visualizar a pressão atual e da semana anterior para duas proposições.
 
-A Pressão da semana atual é a vermelha escura e a pressão da semana anterior é a cor de rosa mais larga (a largura das barras serve exclusivamente para indicar a sobreposição), enquanto a maior pressão alcançada é representada pela barra cinza.
+A Pressão da semana atual (12/05/2019) é a vermelha escura e a pressão da semana anterior (05/05/2019) é a cor de rosa mais larga (a largura das barras serve exclusivamente para indicar a sobreposição), enquanto a maior pressão alcançada é representada pela barra cinza, onde informamos, também, a data de sua máxima.
 
-###PEC 06/2019 - Nova Previdência
+### PEC 06/2019 - Nova Previdência
 
 ```{r fig.align='center'}
 
@@ -152,7 +152,7 @@ ggplotly(p)
 
 Como podemos perceber, a pressão externa da Reforma da Previdência subiu na última semana.
 
-###MPV 881/2019 - Liberdade Econômica
+### MPV 881/2019 - Liberdade Econômica
 
 ```{r fig.align='center'}
 atual_popularidade_lib_economica <- formata_para_visualizacao_semana_anterior_semana_posterior(liberdade_economica_apelido)
@@ -167,7 +167,7 @@ ggplotly(p)
 
 Como podemos perceber, a pressão externa da MPV da Liberdade Econômica também subiu na última semana.
 
-##Evolução da Pressão
+## Evolução da Pressão
 
 Adiante, analisamos o histórico da pressão ao longo dos 6 últimos meses e tentamos mapear seus picos e quedas acentuadas em acontecimentos contemporâneos.
 
@@ -228,7 +228,7 @@ data %>% group_by(semana, nome_prop) %>%  ggplot() +
 ```
 
 
-###PEC 06/2019 - Nova previdência
+### PEC 06/2019 - Nova previdência
 
 ```{r}
 semana <- previdencia_apelido %>% 
@@ -253,7 +253,7 @@ ggplotly(p)
 **Queda acentuada semana 15/07:** Recesso parlamentar
 
 
-###MPV 881/2019 - Liberdade Econômica
+### MPV 881/2019 - Liberdade Econômica
 
 ```{r}
 
@@ -278,7 +278,7 @@ ggplotly(p)
 **Pico semana 05/08:** [Novo texto](https://exame.abril.com.br/economia/novo-texto-da-mp-da-liberdade-economica-inclui-trabalho-aos-domingos/)
 
 
-###PLS 495/2017 - Mercado da Água
+### PLS 495/2017 - Mercado da Água
 
 ```{r}
 
@@ -300,7 +300,7 @@ ggplotly(p)
 
 Postagem falsa liga governo a PL de 2017 e que não se refere à venda do aquífero Guarani
 
-##Fonte da Pressão: Nome Formal vs. Apelido
+## Fonte da Pressão: Nome Formal vs. Apelido
 
 ```{r}
 # Comparação entre nome formal e apelido
@@ -312,7 +312,7 @@ ggplotly(hide_legend(p))
 
 ```
 
-###Comparação entre termos comuns para PEC 06/2019
+### Comparação entre termos comuns para PEC 06/2019
 
 <div style="width:1000px">
 ![Captura de tela](previdencia.png)
