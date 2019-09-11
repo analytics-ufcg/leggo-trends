@@ -23,8 +23,7 @@ knitr::opts_chunk$set(echo = FALSE,
                comment = NA,
                message = FALSE,
                warning = FALSE,
-	             fig.width=12,
-	             fig.align='center')
+	             fig.width=12)
 ```
 
 ```{r, message=FALSE}
@@ -114,7 +113,7 @@ semana_apelido %>%
 }
 
 create_grafico_semana_anterior_semana_posterior <- function(data, prop_maximo) {
-  ggplot(data=data,aes(x=apelido, y=pop_semana))+
+  ggplot(data=data,aes(x=apelido, y=pop_semana, text=paste("Apelido: ", apelido,"<br>", "Popularidade: ", pop_semana, "%")))+
   geom_bar(aes(y=100),stat="identity",position ="identity",alpha=0.4,fill='grey', width = 0.4) +
   geom_bar(aes(y=pop_ant), stat="identity", position ="identity", alpha=1, fill='pink', width = 0.3) +
   geom_bar(aes(y=pop_semana), stat="identity", position ="identity", alpha=.5, fill='red', width = 0.2) +
@@ -147,7 +146,7 @@ prop_maximo <- previdencia_apelido %>%
   filter(pop == 100)
 
 p <- create_grafico_semana_anterior_semana_posterior(atual_popularidade_previdencia, prop_maximo)
-ggplotly(p)
+ggplotly(p, tooltip = c("text"))
 ```
 
 Como podemos perceber, a pressão externa da Reforma da Previdência subiu na última semana.
@@ -162,7 +161,7 @@ prop_maximo <- liberdade_economica_apelido %>%
 
 p <- create_grafico_semana_anterior_semana_posterior(atual_popularidade_lib_economica, prop_maximo)
 
-ggplotly(p)
+ggplotly(p, tooltip = c("text"))
 ```
 
 Como podemos perceber, a pressão externa da MPV da Liberdade Econômica também subiu na última semana.
@@ -172,24 +171,20 @@ Como podemos perceber, a pressão externa da MPV da Liberdade Econômica também
 Adiante, analisamos o histórico da pressão ao longo dos 6 últimos meses e tentamos mapear seus picos e quedas acentuadas em acontecimentos contemporâneos.
 
 ```{r, message=FALSE}
-create_grafico_temporal_formal <- function(semana, cor, titulo) {
-semana %>%  ggplot() + 
-  geom_area(aes(x=segunda, y = pop_semana), fill = cor) +
+create_grafico_temporal_formal <- function(semana, cor, titulo, pontos, vjust, hjust) {
+ggplot(data = semana, aes(x=segunda, y = pop_semana)) + 
+  geom_area(fill = cor) +
   xlab("Semana") + 
   ylab("Pressão") +
   ggtitle(titulo) +
   scale_x_date(date_labels = "%d-%m-%Y") +
+  geom_point(data=pontos, colour="red", size=2) +
+  geom_text(data=pontos, 
+            aes(x=as.Date(segunda), 
+            y=pop_semana, 
+            label=paste0("Semana: ",format(segunda,"%d/%m/%y"),"\nPopularidade: ",pop_semana, "%")),
+            hjust = hjust, vjust = vjust,size=3) +
   scale_y_continuous(labels = function(x) paste0(x, "%"))+
-  theme_minimal()
-}
-
-create_grafico_temporal_apeido <- function(data, cor, titulo) {
-  data %>%  ggplot() + 
-  geom_area(aes(x=as.Date(periodo), y = temperatura_recente), fill = cor) +
-  xlab("Semana") + 
-  ylab("Temperatura") +
-  ggtitle(titulo) +
-  scale_x_date(date_labels = "%d-%m-%Y") +
   theme_minimal()
 }
 
@@ -237,9 +232,12 @@ semana <- previdencia_apelido %>%
   summarise(pop_semana = max(pop)) %>% 
   mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
   
+pontos <- tibble(segunda = c('2019-02-18', '2019-03-18', '2019-04-22', '2019-07-08', '2019-07-15'),
+                 pop_semana = c(54, 8, 12, 100, 25)) %>% 
+  mutate(segunda = as.Date(segunda))
 
-p <- create_grafico_temporal_formal(semana,  "#FF7700", "Evolução da pressão da PEC 06/2019 - Nova previdência")
-ggplotly(p)
+p <- create_grafico_temporal_formal(semana,  "#FF7700", "Evolução da pressão da PEC 06/2019 - Nova previdência", pontos, vjust = 0.5,hjust = 0)
+p
 ```
 
 **Pico semana 18/02:** Apresentação da Proposta de Emenda à Constituição n. 6/2019, pelo Poder Executivo.
@@ -263,17 +261,23 @@ semana <- liberdade_economica_apelido %>%
   summarise(pop_semana = max(pop)) %>% 
   mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
   
-p <- create_grafico_temporal_formal(semana, "#7678ED", "Evolução da pressão da MPV 881/2019") 
+pontos <- tibble(segunda = c('2019-04-29', '2019-06-10', '2019-07-08', '2019-07-15', '2019-08-05'),
+                 pop_semana = c(100, 39, 53, 14, 27)) %>% 
+  mutate(segunda = as.Date(segunda))
 
-ggplotly(p)
+p <- create_grafico_temporal_formal(semana, "#7678ED", "Evolução da pressão da MPV 881/2019", pontos, vjust = 1, hjust = 1) 
+
+p
 
 ```
 
 **Pico semana 29/04:** [Bolsonaro assina mp](https://www.gazetadopovo.com.br/republica/mp-da-liberdade-economica/)
 
-**Pico semana 06/10:** Houve algumas notícias sobre a previdência [OGlobo](https://oglobo.globo.com/economia/governo-dispensa-287-tipos-de-empresas-de-alvaras-de-funcionamento-23735455)
+**Pico semana 10/06:** Houve algumas notícias sobre a previdência [OGlobo](https://oglobo.globo.com/economia/governo-dispensa-287-tipos-de-empresas-de-alvaras-de-funcionamento-23735455)
 
 **Pico semana 08/07:** Aprovação na Comissão Mista
+
+**Queda acentuada semana 15/07:** Recesso parlamentar
 
 **Pico semana 05/08:** [Novo texto](https://exame.abril.com.br/economia/novo-texto-da-mp-da-liberdade-economica-inclui-trabalho-aos-domingos/)
 
@@ -288,9 +292,13 @@ semana <- mercado_agua_nome_formal %>%
   summarise(pop_semana = max(pop)) %>% 
   mutate(segunda = as.Date(paste0('2019', sprintf("%02d", semana - 1), '1'), '%Y%W%u'))
 
-p <-create_grafico_temporal_formal(semana, "#BFACAA", "Evolução da pressão da PLS 495/2017")
+pontos <- tibble(segunda = c('2019-05-20','2019-07-15'),
+                 pop_semana = c(95, 100)) %>% 
+  mutate(segunda = as.Date(segunda))
 
-ggplotly(p)
+p <-create_grafico_temporal_formal(semana, "#BFACAA", "Evolução da pressão da PLS 495/2017", pontos, vjust = 1, hjust = 1)
+
+p
 
 ```
 
@@ -308,19 +316,11 @@ semana_comp <- formata_data_comparativo(previdencia_comparacao, "nova previdênc
 
 p <- create_grafico_comparativo(semana_comp, "Comparação da evolução da pressão - PEC: Apelido vs Nome formal")
 
-ggplotly(hide_legend(p))
+p
 
 ```
 
-### Comparação entre termos comuns para PEC 06/2019
-
-<div style="width:1000px">
-![Captura de tela](previdencia.png)
-</div>
-
-
-Como podemos perceber, existem apelidos mais populares (maior pressão) para a Reforma da Previdência, mas cujo comportamento da curva é o mesmo.
-
+Vemos que, quando bem escolhido, o apelido tem um desempenho bem melhor que o nome formal.
 
 ```{r}
 # Comparação entre nome formal e apelido
@@ -329,7 +329,21 @@ semana_comp <- formata_data_comparativo(liberdade_economica_comparacao, "liberda
 
 p <- create_grafico_comparativo(semana_comp, "Comparação da evolução da pressão - MPV: Apelido vs Nome formal")
 
-ggplotly(hide_legend(p))
+p
 ```
-**Pico semana 29/04:** Publicada no DOU de 30/04/2019, Edição Extra B, na página 1, a Medida Provisória 881/2019.
 
+
+### Comparação entre termos comuns para PEC 06/2019
+
+<div style="width:1000px">
+![](previdencia.png)
+</div>
+
+Como podemos perceber, existem apelidos mais populares (maior pressão) para a Reforma da Previdência, mas cujo comportamento da curva é o mesmo.
+
+<div style="width:1000px">
+![](teto_remuneratorio.png)
+
+Também existem apelidos que não capturam qualquer informação, enquanto seu nome formal sim, como é o caso da PL 6726/2016 (Lei do Teto Remuneratório).
+
+Acompanhe melhor: https://www.leggo.org.br
