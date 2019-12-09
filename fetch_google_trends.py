@@ -129,6 +129,7 @@ def write_csv_popularidade(df_path, export_path):
         pop_df = get_popularidade(list(termos), timeframe)
 
         if (pop_df.empty):
+            pop_df = pd.DataFrame(data, columns = ['id_ext', 'date', 'casa', nome_formal, apelido, 'isPartial', 'max_pressao_principal', 'max_pressao_rel', 'maximo_geral']) 
             props_sem_popularidade += 1
 
             print ('O Google nao retornou nenhum dado sobre: ' + apelido)
@@ -137,7 +138,8 @@ def write_csv_popularidade(df_path, export_path):
             pop_df['id_ext'] = id_ext
             pop_df['casa'] = casa
             pop_df = agrupa_por_semana(pop_df)
-            pop_df.to_csv(export_path + 'pop_' + id_ext + '.csv', encoding='utf8')
+            
+        pop_df.to_csv(export_path + 'pop_' + id_ext + '.csv', encoding='utf8', index=False)
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
 
