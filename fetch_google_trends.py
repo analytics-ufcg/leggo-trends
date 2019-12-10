@@ -141,7 +141,7 @@ def write_csv_popularidade(df_path, export_path):
             pop_df['casa'] = casa
             pop_df = agrupa_por_semana(pop_df)
             
-        pop_df.to_csv(export_path + 'pop_' + id_ext + '.csv', encoding='utf8', index=False)
+        pop_df.to_csv(export_path + 'pop_' + str(id_leggo) + '.csv', encoding='utf8', index=False)
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
 
