@@ -43,9 +43,9 @@ df_google_trends <-
   mutate(apresentacao = as.Date(ymd_hms(data_apresentacao)),
          nome_formal = paste0(sigla_tipo, " ", numero, "/", year(apresentacao)),
          apelido = iconv(apelido, from="UTF-8", to="ASCII//TRANSLIT")) %>% 
-  select(apelido, nome_formal, apresentacao, id_ext, casa) %>% 
+  select(id_leggo, apelido, nome_formal, apresentacao, id_ext, casa) %>% 
   group_by(apelido) %>% 
-  arrange(apelido, apresentacao) %>%  
+  arrange(apelido, desc(apresentacao)) %>%  
   slice(n())
 
 write_csv(df_google_trends, apelidos_filepath)
