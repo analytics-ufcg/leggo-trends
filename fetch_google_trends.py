@@ -6,6 +6,7 @@ from datetime import date, datetime
 from datetime import timedelta
 from unidecode import unidecode
 import sys
+from pathlib import Path
 
 def print_usage():
     '''
@@ -159,6 +160,7 @@ if __name__ == "__main__":
 
     pytrend = TrendReq()
 
+    Path(export_path).mkdir(exist_ok=True)
 
     write_csv_popularidade(df_path, export_path)
 

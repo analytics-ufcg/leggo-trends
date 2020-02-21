@@ -14,5 +14,6 @@ services:
 volumes:
   proposicoes_data:
     external:
-      name: back_proposicoes_data
+      name: leggo_data
+
 
