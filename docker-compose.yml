@@ -9,10 +9,10 @@ services:
      context: ./
      dockerfile: ./Dockerfile
    volumes:
-     - proposicoes_data:/leggo-trends/data
+     - leggo_data:/leggo-trends/data
 
 volumes:
-  proposicoes_data:
+  leggo_data:
     external:
       name: leggo_data
 
