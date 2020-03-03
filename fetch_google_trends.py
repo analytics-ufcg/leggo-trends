@@ -23,8 +23,8 @@ def get_data_inicial(apresentacao):
     '''
     
     seis_meses_atras = date.today() - timedelta(days=180)
-    if datetime.strptime(apresentacao,'%Y-%m-%d').date() > seis_meses_atras:
-        return apresentacao
+    if apresentacao > seis_meses_atras:
+        return apresentacao.strftime('%Y-%m-%d')
     else:
         return seis_meses_atras.strftime('%Y-%m-%d')
 
@@ -114,7 +114,7 @@ def write_csv_popularidade(df_path, export_path):
     '''
 
     props_sem_popularidade = 0
-    apelidos = pd.read_csv(df_path, encoding='utf-8')
+    apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
     for index, row in apelidos.iterrows():
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
         apelido = row['apelido'].replace('(', '').replace(')', '')
