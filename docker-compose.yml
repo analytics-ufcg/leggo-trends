@@ -1,0 +1,18 @@
+# Compose used for production
+
+version: '3.5'
+
+services:
+ leggo-trends:
+   image: agoradigital/leggo-trends
+   build:
+     context: ./
+     dockerfile: ./Dockerfile
+   volumes:
+     - proposicoes_data:/leggo-trends/data
+
+volumes:
+  proposicoes_data:
+    external:
+      name: back_proposicoes_data
+
