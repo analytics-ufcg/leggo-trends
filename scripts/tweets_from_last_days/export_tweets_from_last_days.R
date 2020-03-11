@@ -2,11 +2,11 @@
 library(magrittr)
 library(tidyverse)
 
-source(here::here("scripts/tweets_from_last_30_days/generate_tweets_from_last_30_days.R"))
+source(here::here("scripts/tweets_from_last_days/generate_tweets_from_last_days.R"))
 
 help <- "
 Usage:
-Rscript export_tweets_from_last_3_months.R <pls_words_filepath> <data_path>
+Rscript export_tweets_from_last_days.R <pls_words_filepath> <data_path>
 "
 
 ## Process args
@@ -25,13 +25,14 @@ devtools::install_github("mrdwab/SOfun")
 ## Read PLs list
 if (!file.exists(pls_words_filepath)) {
   source(here::here("scripts/keywords/generate_keywords.R"))
-  pls_words <- generate_keywords(readr::read_csv(here::here("data/proposicoes.csv")))
+  words_df <- generate_keywords(readr::read_csv(here::here("data/proposicoes.csv"))) %>% 
+    dplyr::mutate(keywords = NA)
   
 } else {
-  pls_words <- readr::read_csv(pls_words_filepath)
+  words_df <- readr::read_csv(pls_words_filepath)
 }
 
-new_tweets <- search_last_30_days(pls_words) %>%
+new_tweets <- search_last_tweets(words_df) %>%
   dplyr::mutate_all(~ as.character(.))
 
 trends <- leggoTrends::generate_twitter_trends(new_tweets)

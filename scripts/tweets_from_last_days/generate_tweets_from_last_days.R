@@ -63,54 +63,61 @@
   
   queries <- active_users %>%
     dplyr::mutate(n_char = nchar(query) + nchar(" OR ")) %>%
-    dplyr::group_by(group_500 = MESS::cumsumbinning(n_char, 256)) %>%
+    dplyr::group_by(group_500 = MESS::cumsumbinning(n_char, 500)) %>%
     dplyr::mutate(cumsum_500 = cumsum(n_char)) %>%
     dplyr::group_by(group_500) %>%
     dplyr::summarise(authors_query = paste0( query, collapse = " OR ")) %>% 
     dplyr::ungroup() %>% 
     dplyr::select(authors_query)
   
-  words_df <- words_df %>% 
-    dplyr::mutate(query = paste0(tolower(apelido), "|", tolower(nome_formal)))
+  words_df <- words_df %>%
+    dplyr::mutate(query = paste0(
+      tolower(apelido),
+      "|",
+      tolower(nome_formal),
+      if_else(is.na(keywords),
+              '',
+              paste0("|", tolower(keywords)))
+    )) %>% 
+    dplyr::select(id_leggo, id_ext, casa, query)
   
-  words_query <- paste0(words_df %>% 
-                          dplyr::pull(query), 
-                        collapse = "|")
-  
-  return(list(queries, words_query))
+  return(list(queries, words_df))
 }
+
+#' @title Filtra os tweets a partir de regex
+#' @description Recebe dois dataframes, filtrando os textos dos tweets de acordo com uma lista de regex e 
+#' retorna um dataframe com os tweets filtrados e proposições relativas
+#' @return Dataframe com dados de tweets e proposições citadas.
+.filter_tweets <- function(tweets, words_query) {
+  library(tidyverse)
+  
+  tweets_alt <- tweets %>% 
+    dplyr::mutate(processed_text = iconv(tolower(text), to = "ASCII//TRANSLIT")) %>% 
+    dplyr::select(favorite_count, retweet_count, processed_text, week)
+  
+  df <- tweets_alt %>% 
+    fuzzyjoin::regex_inner_join(words_query, by = c(processed_text = "query")) %>% 
+    dplyr::select(-query)
+  
+  return(df)
+}
+
 
 #' @title Retorna os usernames dos parlamentares
 #' @description A partir de uma planilha do Drive, retorna os dados de usernames dos parlamentares no twitter.
 #' @return Dataframe com usernames de parlamentares no twitter
-search_last_30_days <- function(words_df, 
-                                from_date = format(Sys.time() - 60 * 60 * 24 * 30, '%Y%m%d%H%M'), 
-                                to_date = format(Sys.time(), '%Y%m%d%H%M')) {
+search_last_tweets <- function(words_df) {
   library(tidyverse)
   
   processed_inputs <- .process_functions_inputs(words_df)
   
-  source(here::here("R/twitter.R"))
-  
-  queries <- processed_inputs[[1]] %>% 
-    dplyr::top_n(30)
+  queries <- processed_inputs[[1]] 
   words_query <- processed_inputs[[2]]
   
-  token <- leggoTrends::generate_token(
-    Sys.getenv("APP_NAME"),
-    Sys.getenv("TWITTER_ACCESS_TOKEN"),
-    Sys.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
-    Sys.getenv("TWITTER_API_KEY"),
-    Sys.getenv("TWITTER_API_SECRET_KEY"))
-
-  env_name <- Sys.getenv("TWITTER_DEV_ENV")
-  
   tweets <- purrr::map_df(
-   queries$authors_query, ~ get_tweets_pls_last_30_days(.x,
-                                               words_filter = words_query,
-                                               from_date = from_date,
-                                               to_date = to_date,
-                                               token = token,
-                                               env_name = env_name))
-  return(tweets)
+   queries$authors_query, ~ leggoTrends::get_tweets(.x))
+  
+  filtered_tweets <- .filter_tweets(tweets, words_query)
+  
+  return(filtered_tweets)
 }
