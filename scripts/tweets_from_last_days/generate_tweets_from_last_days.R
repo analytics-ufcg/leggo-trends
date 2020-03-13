@@ -29,7 +29,7 @@
 }
 
 #' @title Retorna os parlamentares que ativos no Twitter
-#' @description A partir da lista de usernames, retorna os parlamentares que tiveram alguma 
+#' @description A partir da lista de usernames, retorna os parlamentares que tiveram alguma
 #' atividade no Twitter nos últimos 30 dias.
 #' @return Dataframe com parlamentares ativos no Twitter nos últimos 30 dias.
 .filter_active_users <- function(usernames_list) {
@@ -48,7 +48,7 @@
 }
 
 #' @title Retorna os dados de entrada para a função do leggoTrends que retorna os tweets dos últimos 30 dias.
-#' @description A partir do dataframe com os apelidos das proposições, processa e retorna as palavras-chave 
+#' @description A partir do dataframe com os apelidos das proposições, processa e retorna as palavras-chave
 #' que filtrarão os tweets. É nesta função que as consultas dos autores de interesse serão geradas.
 #' @param  words_df Dataframe contendo os dados de apelidos das proposições.
 #' @return Uma lista contendo: um dataframe com as queries de autores e uma string com as palavras-chave
@@ -66,37 +66,46 @@
     dplyr::group_by(group_500 = MESS::cumsumbinning(n_char, 500)) %>%
     dplyr::mutate(cumsum_500 = cumsum(n_char)) %>%
     dplyr::group_by(group_500) %>%
-    dplyr::summarise(authors_query = paste0( query, collapse = " OR ")) %>% 
-    dplyr::ungroup() %>% 
+    dplyr::summarise(authors_query = paste0(query, collapse = " OR ")) %>%
+    dplyr::ungroup() %>%
     dplyr::select(authors_query)
   
+  if ("keywords" %in% names(queries)) {
+    words_df <- words_df %>%
+      dplyr::mutate(query = paste0(tolower(apelido),
+                                   "|",
+                                   tolower(nome_formal)))
+  } else {
+    words_df <- words_df %>%
+      dplyr::mutate(query = paste0(
+        tolower(apelido),
+        "|",
+        tolower(nome_formal),
+        if_else(is.na(keywords),
+                '',
+                paste0("|", tolower(keywords)))
+      ))
+  }
+  
   words_df <- words_df %>%
-    dplyr::mutate(query = paste0(
-      tolower(apelido),
-      "|",
-      tolower(nome_formal),
-      if_else(is.na(keywords),
-              '',
-              paste0("|", tolower(keywords)))
-    )) %>% 
     dplyr::select(id_leggo, id_ext, casa, query)
   
   return(list(queries, words_df))
 }
 
 #' @title Filtra os tweets a partir de regex
-#' @description Recebe dois dataframes, filtrando os textos dos tweets de acordo com uma lista de regex e 
+#' @description Recebe dois dataframes, filtrando os textos dos tweets de acordo com uma lista de regex e
 #' retorna um dataframe com os tweets filtrados e proposições relativas
 #' @return Dataframe com dados de tweets e proposições citadas.
 .filter_tweets <- function(tweets, words_query) {
   library(tidyverse)
   
-  tweets_alt <- tweets %>% 
-    dplyr::mutate(processed_text = iconv(tolower(text), to = "ASCII//TRANSLIT")) %>% 
+  tweets_alt <- tweets %>%
+    dplyr::mutate(processed_text = iconv(tolower(text), to = "ASCII//TRANSLIT")) %>%
     dplyr::select(favorite_count, retweet_count, processed_text, week)
   
-  df <- tweets_alt %>% 
-    fuzzyjoin::regex_inner_join(words_query, by = c(processed_text = "query")) %>% 
+  df <- tweets_alt %>%
+    fuzzyjoin::regex_inner_join(words_query, by = c(processed_text = "query")) %>%
     dplyr::select(-query)
   
   return(df)
@@ -111,11 +120,11 @@ search_last_tweets <- function(words_df) {
   
   processed_inputs <- .process_functions_inputs(words_df)
   
-  queries <- processed_inputs[[1]] 
+  queries <- processed_inputs[[1]]
   words_query <- processed_inputs[[2]]
   
-  tweets <- purrr::map_df(
-   queries$authors_query, ~ leggoTrends::get_tweets(.x))
+  tweets <-
+    purrr::map_df(queries$authors_query, ~ leggoTrends::get_tweets(.x))
   
   filtered_tweets <- .filter_tweets(tweets, words_query)
   
