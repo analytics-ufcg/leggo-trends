@@ -36,19 +36,22 @@ print(args)
 proposicoes_filepath <- args$proposicoes_filepath
 apelidos_filepath <- args$apelidos_filepath
 
-## Read PLs list
-if (!file.exists(apelidos_filepath)) {
-  proposicao <- read_csv(proposicoes_filepath)
-  
-  df_google_trends <- 
+proposicao <- read_csv(proposicoes_filepath,
+                       col_types = list(
+                        .default = readr::col_character(),
+                        id_leggo = readr::col_double(),
+                        id_ext = readr::col_double(),
+                        data_apresentacao = readr::col_datetime(format = "")
+                      ))
+
+df_google_trends <- 
     proposicao %>% 
-    mutate(apresentacao = as.Date(ymd_hms(data_apresentacao)),
-           nome_formal = paste0(sigla_tipo, " ", numero, "/", year(apresentacao)),
+    rename(apresentacao = data_apresentacao) %>% 
+    mutate(nome_formal = paste0(sigla_tipo, " ", numero, "/", year(apresentacao)),
            apelido = iconv(apelido, from="UTF-8", to="ASCII//TRANSLIT")) %>% 
     select(id_leggo, apelido, nome_formal, apresentacao, id_ext, casa) %>% 
     group_by(apelido) %>% 
     arrange(apelido, desc(apresentacao)) %>%  
     slice(n())
-  
-  write_csv(df_google_trends, apelidos_filepath)
-}
+
+write_csv(df_google_trends, apelidos_filepath)
