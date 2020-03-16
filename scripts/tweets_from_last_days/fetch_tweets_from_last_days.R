@@ -124,7 +124,8 @@ search_last_tweets <- function(words_df) {
   words_query <- processed_inputs[[2]]
   
   tweets <-
-    purrr::map_df(queries$authors_query, ~ leggoTrends::get_tweets(.x))
+    purrr::map_df(queries$authors_query, ~ leggoTrends::get_tweets(.x)) %>% 
+    dplyr::mutate(week = lubridate::floor_date(as.Date(created_at), "week"))
   
   filtered_tweets <- .filter_tweets(tweets, words_query)
   

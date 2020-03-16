@@ -2,7 +2,8 @@
 library(magrittr)
 library(tidyverse)
 
-source(here::here("scripts/tweets_from_last_days/generate_tweets_from_last_days.R"))
+source(here::here("scripts/tweets_from_last_days/fetch_tweets_from_last_days.R"))
+source(here::here("scripts/tweets_from_last_days/process_popularity.R"))
 
 help <- "
 Usage:
@@ -37,7 +38,8 @@ cat("Gerando dados de tweets sobre proposições e os de trends (sumarizado por 
 new_tweets <- search_last_tweets(words_df) %>%
   dplyr::mutate_all(~ as.character(.))
 
-trends <- leggoTrends::generate_twitter_trends(new_tweets)
+trends <- leggoTrends::generate_twitter_trends(new_tweets) %>% 
+  calculate_populatiry_score()
 
 write_csv(new_tweets, paste0(data_path, "/tweets.csv"))
 write_csv(trends, paste0(data_path, "/trends.csv"))
