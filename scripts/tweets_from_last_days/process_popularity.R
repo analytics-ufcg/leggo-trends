@@ -10,11 +10,11 @@ calculate_populatiry_score <- function(trends) {
     dplyr::group_by(week) %>%
     dplyr::mutate(total_retweets = sum(retweets),
                   total_likes = sum(favs)) %>%
-    dplyr::mutate(general_popularity = (total_retweets * 0.7 + total_likes * 0.3) / 2) %>%
+    dplyr::mutate(general_popularity = (total_retweets * 7 + total_likes * 3) / 10) %>%
     dplyr::ungroup() %>%
     dplyr::group_by(id_leggo, id_ext, casa, week) %>%
     dplyr::mutate(
-      popularity = (retweets * 0.7 + favs * 0.3) / 2,
+      popularity = (retweets * 7 + favs * 3) / 10,
       mean_popularity = popularity / general_popularity
     ) %>%
     dplyr::select(id_leggo, id_ext, casa, date = week, mean_popularity)
