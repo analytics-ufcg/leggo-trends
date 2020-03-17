@@ -70,7 +70,7 @@
     dplyr::ungroup() %>%
     dplyr::select(authors_query)
   
-  if ("keywords" %in% names(queries)) {
+  if (!"keywords" %in% names(queries)) {
     words_df <- words_df %>%
       dplyr::mutate(query = paste0(tolower(apelido),
                                    "|",
