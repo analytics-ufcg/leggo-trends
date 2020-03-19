@@ -102,7 +102,7 @@
   
   tweets_alt <- tweets %>%
     dplyr::mutate(processed_text = iconv(tolower(text), to = "ASCII//TRANSLIT")) %>%
-    dplyr::select(favorite_count, retweet_count, processed_text, week)
+    dplyr::select(status_id, favorite_count, retweet_count, processed_text, week)
   
   df <- tweets_alt %>%
     fuzzyjoin::regex_inner_join(words_query, by = c(processed_text = "query")) %>%

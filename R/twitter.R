@@ -35,7 +35,7 @@ get_tweets_pls <- function(words_df) {
 #' @export
 get_tweets <- function(word) {
   cat(paste0("\n", "Baixando tweets com termo: '", word, "'...", "\n"))
-  tweets <- rtweet::search_tweets(word, n = 250000, retryonratelimit = TRUE, include_rts = FALSE)
+  tweets <- suppressWarnings(rtweet::search_tweets(word, n = 250000, retryonratelimit = TRUE, include_rts = FALSE))
   if (leggoTrends::check_dataframe(tweets)) {
     tweets <- tweets %>%
       dplyr::mutate(termo = word) %>%

@@ -23,4 +23,4 @@ Suggests: testthat,
     rcmdcheck,
     lintr
 VignetteBuilder: knitr
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
