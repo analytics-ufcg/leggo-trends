@@ -14,14 +14,14 @@ RUN R -e "install.packages('glmnet',dependencies=TRUE, repos='http://cran.rstudi
 RUN R -e "devtools::install_github('ekstroem/MESS')"
 RUN R -e "devtools::install_github('ropensci/rtweet')"
 
-RUN apt-get update && apt-get install -y python3.6 python3-pip
+RUN apt-get install -y python3-pip
 
 RUN pip3 install pandas
-RUN pip install git+https://github.com/GeneralMills/pytrends
-RUN pip install unidecode
+RUN pip3 install git+https://github.com/GeneralMills/pytrends
+RUN pip3 install unidecode
 
 COPY . .
 
 RUN R -e "devtools::install()"
 
-CMD cd scripts/tweets_from_last_days && Rscript export_tweets_from_last_days.R ../../data/apelidos.csv ../../data
+CMD Rscript gera_entrada_google_trends.R -p data/proposicoes.csv -a data/apelidos.csv && python fetch_google_trends.py data/apelidos.csv data/pops/
