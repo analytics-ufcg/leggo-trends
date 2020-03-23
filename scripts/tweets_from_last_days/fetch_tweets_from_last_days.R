@@ -117,6 +117,7 @@
 #' @return Dataframe com usernames de parlamentares no twitter
 search_last_tweets <- function(words_df) {
   library(tidyverse)
+  options(lubridate.week.start = 1)
   
   processed_inputs <- .process_functions_inputs(words_df)
   
@@ -127,7 +128,8 @@ search_last_tweets <- function(words_df) {
     purrr::map_df(queries$authors_query, ~ leggoTrends::get_tweets(.x)) %>% 
     dplyr::mutate(week = lubridate::floor_date(as.Date(created_at), "week"))
   
-  filtered_tweets <- .filter_tweets(tweets, words_query)
+  filtered_tweets <- .filter_tweets(tweets, words_query) %>% 
+    dplyr::distinct()
   
   return(filtered_tweets)
 }

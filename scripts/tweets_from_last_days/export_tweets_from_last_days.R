@@ -5,19 +5,33 @@ library(tidyverse)
 source(here::here("scripts/tweets_from_last_days/fetch_tweets_from_last_days.R"))
 source(here::here("scripts/tweets_from_last_days/process_popularity.R"))
 
-help <- "
-Usage:
-Rscript export_tweets_from_last_days.R <pls_words_filepath> <data_path>
-"
-
-## Process args
-args <- commandArgs(trailingOnly = TRUE)
-min_num_args <- 2
-if (length(args) < min_num_args) {
-  stop(paste("Wrong number of arguments!", help, sep = "\n"))
+if(!require(optparse)){
+  install.packages("optparse")
+  suppressWarnings(suppressMessages(library(optparse)))
 }
-pls_words_filepath <- args[1]
-data_path <- args[2]
+
+option_list = list(
+  make_option(
+    c("-a", "--apl"),
+    type = "character",
+    default = here::here("data/apelidos.csv"),
+    help = "caminho do arquivo de apelidos [default= %default]",
+    metavar = "character"
+  ),
+  make_option(
+    c("-o", "--out"),
+    type = "character",
+    default = here::here("data/"),
+    help = "nome da pasta destino dos arquivos de saída [default= %default]",
+    metavar = "character"
+  )
+) 
+
+opt_parser = OptionParser(option_list=option_list)
+opt = parse_args(opt_parser)
+
+pls_words_filepath <- opt$apl
+data_path <- opt$out
 
 ## Read PLs list
 if (!file.exists(pls_words_filepath)) {
