@@ -35,7 +35,14 @@ get_tweets_pls <- function(words_df) {
 #' @export
 get_tweets <- function(word) {
   cat(paste0("\n", "Baixando tweets com termo: '", word, "'...", "\n"))
-  tweets <- rtweet::search_tweets(word, n = 250000, retryonratelimit = TRUE, include_rts = FALSE, verbose = F)
+  tweets <-
+    rtweet::search_tweets(
+      word,
+      n = 250000,
+      retryonratelimit = TRUE,
+      include_rts = FALSE,
+      verbose = F,
+      token = rtweet::get_token())
   if (leggoTrends::check_dataframe(tweets)) {
     tweets <- tweets %>%
       dplyr::mutate(termo = word) %>%
@@ -43,4 +50,26 @@ get_tweets <- function(word) {
   }
   tweets
 
+}
+
+#' @title Gera o token de acesso a requisições PREMIUM
+#' @description A partir das chaves de acesso, gera o token necessário para fazer as requisições do tipo PREMIUM.
+#' @param app_name Nome do aplicativo no Twitter
+#' @param access_token Access token
+#' @param access_token_secret Access token secret
+#' @param api_key API Key
+#' @param api_secret_key API Secret Key
+#' @return Token de acesso a requisições do tipo PREMIUM
+#' @export
+generate_token <- function(app_name, access_token, access_token_secret, api_key, api_secret_key) {
+  token <- 
+    rtweet::create_token(
+      app = app_name,
+      access_token = access_token,
+      access_secret = access_token_secret,
+      consumer_key = api_key,
+      consumer_secret = api_secret_key
+    )
+  
+  return(token)
 }

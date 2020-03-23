@@ -35,14 +35,21 @@
 .filter_active_users <- function(usernames_list) {
   library(tidyverse)
   
-  users_df <- rtweet::lookup_users(usernames_list) %>%
+  users_df <-
+    rtweet::lookup_users(usernames_list, token = rtweet::get_token()) %>%
     rtweet::tweets_data()
   
   last_30_days <- Sys.Date() - 30
   
-  active_users <- users_df %>%
-    dplyr::filter(created_at >= last_30_days) %>%
-    dplyr::select(user_id, username = screen_name)
+  if (nrow(users_df) > 0) {
+    active_users <- users_df %>%
+      dplyr::filter(created_at >= last_30_days) %>%
+      dplyr::select(user_id, username = screen_name)
+    
+    
+  } else {
+    active_users <- tibble::tibble()
+  }
   
   return(active_users)
 }
@@ -56,10 +63,19 @@
 .process_functions_inputs <- function(words_df) {
   library(tidyverse)
   
-  active_users <- .get_parliamentarians_usernames() %>%
-    dplyr::pull(twitter) %>%
-    .filter_active_users() %>%
-    dplyr::mutate(query = paste0("from:", username))
+  parliamentarians_usernames <- .get_parliamentarians_usernames()
+  
+  active_users <- parliamentarians_usernames %>%
+    dplyr::pull(twitter) %>% 
+    .filter_active_users() 
+  
+  if (nrow(active_users) == 0) {
+    active_users <- parliamentarians_usernames %>% 
+      dplyr::select(username = twitter)
+  }
+
+  active_users <- active_users %>% 
+  dplyr::mutate(query = paste0("from:", username))
   
   queries <- active_users %>%
     dplyr::mutate(n_char = nchar(query) + nchar(" OR ")) %>%
@@ -119,6 +135,14 @@ search_last_tweets <- function(words_df) {
   library(tidyverse)
   options(lubridate.week.start = 1)
   
+  token <- leggoTrends::generate_token(
+    Sys.getenv("APP_NAME"),
+    Sys.getenv("TWITTER_ACCESS_TOKEN"),
+    Sys.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
+    Sys.getenv("TWITTER_API_KEY"),
+    Sys.getenv("TWITTER_API_SECRET_KEY")
+    )
+
   processed_inputs <- .process_functions_inputs(words_df)
   
   queries <- processed_inputs[[1]]

@@ -8,6 +8,12 @@ services:
    build:
      context: ./
      dockerfile: ./Dockerfile
+   environment:
+      - APP_NAME=${APP_NAME}   
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
+      - TWITTER_API_KEY=${TWITTER_API_KEY}
+      - TWITTER_API_SECRET_KEY=${TWITTER_API_SECRET_KEY}
    volumes:
      - leggo_data:/leggo-trends/data
 

@@ -3,7 +3,7 @@ library(magrittr)
 library(tidyverse)
 
 source(here::here("scripts/tweets_from_last_days/fetch_tweets_from_last_days.R"))
-source(here::here("scripts/tweets_from_last_days/process_popularity.R"))
+source(here::here("scripts/popularity/process_popularity.R"))
 
 if(!require(optparse)){
   install.packages("optparse")
