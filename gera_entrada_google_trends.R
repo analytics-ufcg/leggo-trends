@@ -21,6 +21,11 @@ get_args <- function() {
                           type="character", 
                           default="exported/apelidos.csv",
                           help=.HELP, 
+                          metavar="character"),
+    optparse::make_option(c("-f", "--update_flag"), 
+                          type="character", 
+                          default=1,
+                          help=.HELP, 
                           metavar="character")
   );
   
@@ -35,23 +40,23 @@ print(args)
 
 proposicoes_filepath <- args$proposicoes_filepath
 apelidos_filepath <- args$apelidos_filepath
+update_flag <- args$update_flag
 
-proposicao <- read_csv(proposicoes_filepath,
-                       col_types = list(
-                        .default = readr::col_character(),
-                        id_leggo = readr::col_double(),
-                        id_ext = readr::col_double(),
-                        data_apresentacao = readr::col_datetime(format = "")
-                      ))
-
-df_google_trends <- 
-    proposicao %>% 
-    rename(apresentacao = data_apresentacao) %>% 
-    mutate(nome_formal = paste0(sigla_tipo, " ", numero, "/", year(apresentacao)),
-           apelido = iconv(apelido, from="UTF-8", to="ASCII//TRANSLIT")) %>% 
-    select(id_leggo, apelido, nome_formal, apresentacao, id_ext, casa) %>% 
-    group_by(apelido) %>% 
-    arrange(apelido, desc(apresentacao)) %>%  
-    slice(n())
-
-write_csv(df_google_trends, apelidos_filepath)
+if (update_flag == 1 | !file.exists(apelidos_filepath)) {
+  cat(paste0("Criando novo arquivo em"), apelidos_filepath, "...\n")
+  
+  source(here::here("scripts/keywords/generate_keywords.R"))
+  
+  proposicao <- read_csv(proposicoes_filepath,
+                         col_types = list(
+                           .default = readr::col_character(),
+                           id_leggo = readr::col_double(),
+                           id_ext = readr::col_double(),
+                           data_apresentacao = readr::col_datetime(format = "")
+                         ))
+  df_google_trends <- generate_keywords(proposicao)
+  
+  write_csv(df_google_trends, apelidos_filepath)
+  
+  cat("Feito!\n")
+}

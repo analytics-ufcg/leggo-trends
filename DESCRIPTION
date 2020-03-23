@@ -1,0 +1,26 @@
+Package: leggoTrends
+Type: Package
+Title: Leggo Trends
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Laboratório Analytics (UFCG)", , , "a@a.com", role = c("aut", "cre", "cph", "fnd")),
+    person("Dado Capital", , , "a@a.com", role = c("aut", "cph", "fnd"))
+    )
+URL: https://github.com/analytics-ufcg/leggoTrends
+BugReports: https://github.com/analytics-ufcg/leggoTrends/issues
+Description: Provides tweets about themes of propositions
+Depends: R (>= 3.4.4)
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Imports: rtweet,
+        lubridate,
+        tidyverse
+Suggests: testthat,
+    knitr,
+    vistime,
+    covr,
+    rcmdcheck,
+    lintr
+VignetteBuilder: knitr
+RoxygenNote: 7.1.0
