@@ -14,6 +14,7 @@ RUN R -e "install.packages('here',dependencies=TRUE, repos='http://cran.rstudio.
 RUN R -e "install.packages('fuzzyjoin',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('ekstroem/MESS')"
 RUN R -e "devtools::install_github('ropensci/rtweet')"
+RUN R -e "devtools::install_github('analytics-ufcg/rcongresso')"
 
 RUN apt-get install -y python3-pip
 

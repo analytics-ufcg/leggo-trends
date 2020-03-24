@@ -121,7 +121,6 @@ def write_csv_popularidade(df_path, export_path):
         nome_formal = row['nome_formal']
         id_ext = str(row['id_ext'])
         casa = row['casa']
-        id_leggo = row['id_leggo']
 
         print('Pesquisando a popularidade: ' + apelido)
 
@@ -131,18 +130,17 @@ def write_csv_popularidade(df_path, export_path):
         pop_df = get_popularidade(list(termos), timeframe)
 
         if (pop_df.empty):
-            pop_df = pd.DataFrame(columns = ['id_leggo', 'id_ext', 'date', 'casa', nome_formal, apelido, 'isPartial', 'max_pressao_principal', 'max_pressao_rel', 'maximo_geral']) 
+            pop_df = pd.DataFrame(columns = ['id_ext', 'date', 'casa', nome_formal, apelido, 'isPartial', 'max_pressao_principal', 'max_pressao_rel', 'maximo_geral']) 
             props_sem_popularidade += 1
 
             print ('O Google nao retornou nenhum dado sobre: ' + apelido)
         else:
             pop_df = calcula_maximos(pop_df, apelido, nome_formal)
-            pop_df['id_leggo'] = id_leggo
             pop_df['id_ext'] = id_ext
             pop_df['casa'] = casa
             pop_df = agrupa_por_semana(pop_df)
             
-        pop_df.to_csv(export_path + 'pop_' + str(id_leggo) + '.csv', encoding='utf8', index=False)
+        pop_df.to_csv(export_path + 'pop_' + str(id_ext) + '_' + casa + '.csv', encoding='utf8', index=False)
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
 

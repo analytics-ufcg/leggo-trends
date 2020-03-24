@@ -12,12 +12,12 @@ calculate_populatiry_score <- function(trends) {
                   total_likes = sum(favs)) %>%
     dplyr::mutate(general_popularity = (total_retweets * 7 + total_likes * 3) / 10) %>%
     dplyr::ungroup() %>%
-    dplyr::group_by(id_leggo, id_ext, casa, week) %>%
+    dplyr::group_by(id_ext, casa, week) %>%
     dplyr::mutate(
       popularity = (retweets * 7 + favs * 3) / 10,
       mean_popularity = popularity / general_popularity
     ) %>%
-    dplyr::select(id_leggo, id_ext, casa, date = week, mean_popularity)
+    dplyr::select(id_ext, casa, date = week, mean_popularity)
   
   return(trends_alt)
 }
@@ -33,14 +33,52 @@ combine_indexes <- function(twitter_trends, pops_folderpath) {
   
   files <- list.files(pops_folderpath, full.names = T)
   
-  google_trends <- purrr::map_df(files, ~ readr::read_csv(.x))
+  google_trends <-
+    purrr::map_df(files,
+                  ~ readr::read_csv(
+                    .x,
+                    col_types = readr::cols(
+                      .default = "d",
+                      id_ext = "c",
+                      casa = "c",
+                      isPartial = "l",
+                      date = readr::col_date(format = "%Y-%m-%d"),
+                      maximo_geral = "d"
+                    )
+                  )) %>%
+    dplyr::mutate(maximo_geral_perc = round(maximo_geral / 100, 2)) %>%
+    dplyr::select(
+      id_ext,
+      casa,
+      is_partial = isPartial,
+      max_pressao_principal,
+      max_pressao_rel,
+      maximo_geral_perc,
+      date
+    )
   
-  trends <- dplyr::inner_join(google_trends,
-                              twitter_trends,
-                              by = c("id_leggo", "id_ext", "casa", "date")) %>%
-    dplyr::rename(twitter_mean_popularity = mean_popularity,
-                  trends_max_popularity = maximo_geral) %>% 
-    dplyr::mutate(popularity = 0.5 * twitter_mean_popularity + 0.5 * trends_max_popularity) %>% 
+  twitter_trends <- twitter_trends %>%
+    dplyr::mutate(date = as.Date(date))
+  
+  trends <- dplyr::full_join(google_trends,
+                             twitter_trends,
+                             by = c("id_ext", "casa", "date")) %>%
+    dplyr::mutate(
+      twitter_mean_popularity = dplyr::if_else(is.na(mean_popularity), 0, mean_popularity),
+      trends_max_popularity = dplyr::if_else(is.na(maximo_geral_perc), 0, maximo_geral_perc)
+    ) %>%
+    dplyr::mutate(popularity = 0.5 * twitter_mean_popularity + 0.5 * trends_max_popularity) %>%
+    dplyr::select(
+      id_ext,
+      casa,
+      date,
+      is_partial,
+      trends_max_pressao_principal = max_pressao_principal,
+      trends_max_pressao_rel = max_pressao_rel,
+      trends_max_popularity,
+      twitter_mean_popularity,
+      popularity
+    ) %>%
     dplyr::distinct()
   
   return(trends)

@@ -14,12 +14,12 @@ get_args <- function() {
   option_list = list(
     optparse::make_option(c("-p", "--proposicoes_filepath"), 
                           type="character", 
-                          default="exported/proposicoes.csv",
+                          default="data/tabela_geral_ids_casa_new.csv",
                           help=.HELP, 
                           metavar="character"),
     optparse::make_option(c("-a", "--apelidos_filepath"), 
                           type="character", 
-                          default="exported/apelidos.csv",
+                          default="data/apelidos.csv",
                           help=.HELP, 
                           metavar="character"),
     optparse::make_option(c("-f", "--update_flag"), 
@@ -47,13 +47,7 @@ if (update_flag == 1 | !file.exists(apelidos_filepath)) {
   
   source(here::here("scripts/keywords/generate_keywords.R"))
   
-  proposicao <- read_csv(proposicoes_filepath,
-                         col_types = list(
-                           .default = readr::col_character(),
-                           id_leggo = readr::col_double(),
-                           id_ext = readr::col_double(),
-                           data_apresentacao = readr::col_datetime(format = "")
-                         ))
+  proposicao <- read_csv(proposicoes_filepath)
   df_google_trends <- generate_keywords(proposicao)
   
   write_csv(df_google_trends, apelidos_filepath)

@@ -27,8 +27,8 @@ option_list = list(
   make_option(
     c("-o", "--out"),
     type = "character",
-    default = here::here("data/"),
-    help = "nome da pasta destino do arquivo de saída deste script [default= %default]",
+    default = here::here("data/pressao.csv"),
+    help = "caminho do arquivo de saída deste script [default= %default]",
     metavar = "character"
   )
 )
@@ -56,11 +56,19 @@ if (!dir.exists(pops_folderpath)) {
   )
 }
 
-twitter_trends <- readr::read_csv(twitter_trends_path)
+twitter_trends <- readr::read_csv(
+  twitter_trends_path,
+  col_types = readr::cols(
+    .default = "c",
+    id_ext = "c",
+    mean_popularity = "d",
+    date = readr::col_date("%Y-%m-%d")
+  )
+)
 
 cat("Gerando dados de popularidade do Google Trends e Twitter...\n")
 popularity <- combine_indexes(twitter_trends, pops_folderpath)
 
-write_csv(popularity, paste0(output_path, "/popularity.csv"))
+write_csv(popularity, paste0(output_path))
 
 cat("Feito!\n")
