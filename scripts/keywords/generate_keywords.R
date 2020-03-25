@@ -10,7 +10,10 @@ generate_keywords <- function(proposicoes) {
   
   df_google_trends <- 
     processed_proposicoes %>% 
-    mutate(apelido = iconv(apelido, from="UTF-8", to="ASCII//TRANSLIT")) %>% 
+    mutate(apelido = iconv(apelido, from="UTF-8", to="ASCII//TRANSLIT") %>% 
+             stringr::str_replace_all("[[:punct:]]", "") %>% 
+             stringr::str_replace_all("[[:space:]]{2}", " ") %>% 
+             substring(1, 100)) %>% 
     select(id_ext, casa, apelido, nome_formal, apresentacao)
   
   return(df_google_trends)
