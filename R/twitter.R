@@ -5,7 +5,7 @@
 #' @export
 generate_twitter_trends <- function(tweets) {
   pressao <- tweets %>%
-    dplyr::group_by(id_ext, casa, week) %>%
+    dplyr::group_by(id_leggo, id_ext, casa, week) %>%
     dplyr::summarise(tweets = n(),
               retweets = sum(as.integer(retweet_count)),
               favs = sum(as.integer((favorite_count))))

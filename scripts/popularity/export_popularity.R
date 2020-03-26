@@ -60,6 +60,7 @@ twitter_trends <- readr::read_csv(
   twitter_trends_path,
   col_types = readr::cols(
     .default = "c",
+    id_leggo = "c",
     id_ext = "c",
     mean_popularity = "d",
     date = readr::col_date("%Y-%m-%d")

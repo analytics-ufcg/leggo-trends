@@ -14,7 +14,7 @@ get_args <- function() {
   option_list = list(
     optparse::make_option(c("-p", "--proposicoes_filepath"), 
                           type="character", 
-                          default="data/tabela_geral_ids_casa_new.csv",
+                          default="data/proposicoes.csv",
                           help=.HELP, 
                           metavar="character"),
     optparse::make_option(c("-a", "--apelidos_filepath"), 
