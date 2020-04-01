@@ -102,7 +102,7 @@ def agrupa_por_semana(pop_df):
     '''
 
     pop_df = pop_df.reset_index()
-    pop_df = pop_df.groupby(['id_ext', pd.Grouper(key='date', freq='W-MON'), 'casa']).agg('max')
+    pop_df = pop_df.groupby(['id_ext', pd.Grouper(key='date', freq='W-MON'), 'casa', 'interesse']).agg('max')
     pop_df = pop_df.reset_index()
     pop_df['date'] = pd.to_datetime(pop_df['date']) - pd.to_timedelta(7, unit = 'd')
 
@@ -122,8 +122,9 @@ def write_csv_popularidade(df_path, export_path):
         id_ext = str(row['id_ext'])
         casa = row['casa']
         id_leggo = row['id_leggo']
+        interesse = row['interesse']
 
-        print('Pesquisando a popularidade: ' + apelido)
+        print('Pesquisando a popularidade: ' + apelido + ' (interesse: ' + interesse + ')')
 
         termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = [unidecode(termo_rel) for termo_rel in termos_relacionados]
@@ -131,7 +132,7 @@ def write_csv_popularidade(df_path, export_path):
         pop_df = get_popularidade(list(termos), timeframe)
 
         if (pop_df.empty):
-            pop_df = pd.DataFrame(columns = ['id_leggo', 'id_ext', 'date', 'casa', nome_formal, apelido, 'isPartial', 'max_pressao_principal', 'max_pressao_rel', 'maximo_geral']) 
+            pop_df = pd.DataFrame(columns = ['id_leggo', 'id_ext', 'date', 'casa', 'interesse', nome_formal, apelido, 'isPartial', 'max_pressao_principal', 'max_pressao_rel', 'maximo_geral']) 
             props_sem_popularidade += 1
 
             print ('O Google nao retornou nenhum dado sobre: ' + apelido)
@@ -140,9 +141,10 @@ def write_csv_popularidade(df_path, export_path):
             pop_df['id_leggo'] = id_leggo
             pop_df['id_ext'] = id_ext
             pop_df['casa'] = casa
+            pop_df['interesse'] = interesse
             pop_df = agrupa_por_semana(pop_df)
             
-        pop_df.to_csv(export_path + 'pop_' + str(id_leggo) + '.csv', encoding='utf8', index=False)
+        pop_df.to_csv(export_path + 'pop_' + str(id_leggo) + '_' + str(interesse) + '.csv', encoding='utf8', index=False)
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
 
