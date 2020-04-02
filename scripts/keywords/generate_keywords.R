@@ -6,6 +6,7 @@
 #' @return Dataframe com apelido e nome formal processadas.
 generate_keywords <- function(proposicoes, interesses) {
   library(tidyverse)
+  source(here::here("scripts/utils/utils.R"))
   
   prop_interesses <- proposicoes %>% 
     left_join(interesses %>% 
@@ -14,10 +15,10 @@ generate_keywords <- function(proposicoes, interesses) {
   
   df_apelidos <- 
     prop_interesses %>% 
-    mutate(apelido = iconv(apelido, from="UTF-8", to="ASCII//TRANSLIT") %>% 
-             stringr::str_replace_all("[[:punct:]]", "") %>% 
+    mutate(apelido = .remove_pontuacao(apelido) %>% 
              stringr::str_replace_all("[[:space:]]{2}", " ") %>% 
              substring(1, 85),
+           keywords = .remove_pontuacao(keywords),
            nome_formal = paste0(sigla_tipo, " ", numero, "/", lubridate::year(data_apresentacao))) %>% 
     select(id_leggo, id_ext, casa, apelido, nome_formal, apresentacao = data_apresentacao, interesse, keywords)
   
