@@ -79,7 +79,7 @@ def get_termos_mais_populares(nome_formal, apelido, keywords, timeframe):
     
     if not pd.isna(keywords):
         for keyword in keywords.split(";"):
-            termos_relacionados_keywords = get_termos_relacionados([keyword], timeframe)
+            termos_relacionados_keywords = get_termos_relacionados([keyword[:85]], timeframe)
             termos_relacionados_total.append(termos_relacionados_keywords)
     
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
@@ -124,7 +124,7 @@ def write_csv_popularidade(df_path, export_path):
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
     for index, row in apelidos.iterrows():
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
-        apelido = row['apelido']
+        apelido = row['apelido'][:85]
         nome_formal = row['nome_formal']
         id_ext = str(row['id_ext'])
         casa = row['casa']
