@@ -67,7 +67,7 @@ def get_termos_relacionados(termo, timeframe):
 
     return related_queries_df
 
-def get_termos_mais_populares(nome_formal, apelido, timeframe):
+def get_termos_mais_populares(nome_formal, apelido, keywords, timeframe):
     '''
     De acordo com os termos relacionados ao nome formal da proposição e a seu apelido
     retorna os 3 termos mais popularidades 
@@ -76,21 +76,28 @@ def get_termos_mais_populares(nome_formal, apelido, timeframe):
     termos_relacionados_formal = get_termos_relacionados([nome_formal], timeframe)
     termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
     termos_relacionados_total = termos_relacionados_formal.append(termos_relacionados_apelido)
+    
+    if not pd.isna(keywords):
+        for keyword in keywords.split(";"):
+            termos_relacionados_keywords = get_termos_relacionados([keyword], timeframe)
+            termos_relacionados_total.append(termos_relacionados_keywords)
+    
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
     if (len(termos_relacionados_total) > 0):
         termos_relacionados_total = termos_relacionados_total.sort_values(by=['value'], ascending=False)[:3]['query']
 
     return termos_relacionados_total.values.tolist()
 
-def calcula_maximos(pop_df, apelido, nome_formal):
+def calcula_maximos(pop_df, apelido, nome_formal, keywords):
     '''
-    Calcula o máximo da pressão entre o apelido e o nome formal,
+    Calcula o máximo da pressão entre o apelido, nome formal e
+    conjunto de palavras-chave,
     entre os termos relacionados e a pressão geral
     '''
 
     termos = pop_df
     termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
-    cols_termos_relacionados = termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]
+    cols_termos_relacionados = termos.columns[~termos.columns.isin([apelido, nome_formal, keywords, 'date', 'max_pressao_principal', 'isPartial'])]
     termos['max_pressao_rel'] = termos[cols_termos_relacionados].max(axis=1) if (len(cols_termos_relacionados) > 0) else 0
     termos['maximo_geral'] = termos[['max_pressao_rel','max_pressao_principal']].max(axis=1)
 
@@ -117,17 +124,22 @@ def write_csv_popularidade(df_path, export_path):
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
     for index, row in apelidos.iterrows():
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
-        apelido = row['apelido'].replace('(', '').replace(')', '')
+        apelido = row['apelido']
         nome_formal = row['nome_formal']
         id_ext = str(row['id_ext'])
         casa = row['casa']
         id_leggo = row['id_leggo']
         interesse = row['interesse']
+        keywords = row['keywords']
 
         print('Pesquisando a popularidade: ' + apelido + ' (interesse: ' + interesse + ')')
 
-        termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
-        termos = [unidecode(termo_rel) for termo_rel in termos_relacionados]
+        termos_relacionados = [nome_formal, apelido, keywords] + get_termos_mais_populares(nome_formal, apelido, keywords, timeframe)
+        termos = []
+        for termo in termos_relacionados:
+            if not pd.isna(termo):
+                termos.append(unidecode(termo))
+        
         termos = set(termos)
         pop_df = get_popularidade(list(termos), timeframe)
 
@@ -137,7 +149,7 @@ def write_csv_popularidade(df_path, export_path):
 
             print ('O Google nao retornou nenhum dado sobre: ' + apelido)
         else:
-            pop_df = calcula_maximos(pop_df, apelido, nome_formal)
+            pop_df = calcula_maximos(pop_df, apelido, nome_formal, keywords)
             pop_df['id_leggo'] = id_leggo
             pop_df['id_ext'] = id_ext
             pop_df['casa'] = casa
