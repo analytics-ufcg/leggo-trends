@@ -35,6 +35,31 @@ def formata_timeframe(passado_formatado):
 
     return passado_formatado + ' ' + date.today().strftime('%Y-%m-%d')
 
+def formata_apelido(apelido):
+    '''
+    Formata o apelido da proposição, limitando seu conteúdo 
+    para o tamanho aceitado pelo pytrends
+    '''
+
+    return apelido[:85]
+
+def formata_keywords(keywords):
+    '''
+    Formata as palavtas-chave da proposição, limitando seu conteúdo 
+    para o tamanho aceitado pelo pytrends
+    '''
+
+    formated_keywords = ''
+    if not pd.isna(keywords):
+        keys = keywords.split(';')
+        len_keys = len(keys)
+        for i in range(len_keys):
+            formated_keywords += keys[i][:85]
+            if i < len_keys - 1:
+                formated_keywords += ';'
+            
+    return formated_keywords
+
 def get_trends(termo, timeframe):
     '''
     Retorna os trends
@@ -77,10 +102,10 @@ def get_termos_mais_populares(nome_formal, apelido, keywords, timeframe):
     termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
     termos_relacionados_total = termos_relacionados_formal.append(termos_relacionados_apelido)
     
-    if not pd.isna(keywords):
-        for keyword in keywords.split(";"):
-            termos_relacionados_keywords = get_termos_relacionados([keyword[:85]], timeframe)
-            termos_relacionados_total.append(termos_relacionados_keywords)
+    if keywords:
+        print("aa")
+        termos_relacionados_keywords = get_termos_relacionados([keyword for keyword in keywords.split(";")], timeframe)
+        termos_relacionados_total.append(termos_relacionados_keywords)
     
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
     if (len(termos_relacionados_total) > 0):
@@ -124,20 +149,21 @@ def write_csv_popularidade(df_path, export_path):
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
     for index, row in apelidos.iterrows():
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
-        apelido = row['apelido'][:85]
+        apelido = formata_apelido(row['apelido'])
         nome_formal = row['nome_formal']
         id_ext = str(row['id_ext'])
         casa = row['casa']
         id_leggo = row['id_leggo']
         interesse = row['interesse']
-        keywords = row['keywords']
+        keywords = formata_keywords(row['keywords'])
 
         print('Pesquisando a popularidade: ' + apelido + ' (interesse: ' + interesse + ')')
 
         termos_relacionados = [nome_formal, apelido, keywords] + get_termos_mais_populares(nome_formal, apelido, keywords, timeframe)
         termos = []
+        
         for termo in termos_relacionados:
-            if not pd.isna(termo):
+            if termo:
                 termos.append(unidecode(termo))
         
         termos = set(termos)
