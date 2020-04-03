@@ -35,6 +35,35 @@ def formata_timeframe(passado_formatado):
 
     return passado_formatado + ' ' + date.today().strftime('%Y-%m-%d')
 
+def formata_apelido(apelido):
+    '''
+    Formata o apelido da proposição, limitando seu conteúdo 
+    para o tamanho aceitado pelo pytrends
+    '''
+
+    return apelido[:85]
+
+def formata_keywords(keywords):
+    '''
+    Formata as palavtas-chave da proposição, limitando 
+    seu conteúdo para o tamanho aceitado pelo pytrends
+    (100 caracteres)
+    '''
+
+    formated_keywords = ''
+    if not pd.isna(keywords):
+        keys = keywords.split(';')
+        for i in range(len(keys)):
+            if len(formated_keywords) + len(keys[i]) < 100:
+                formated_keywords += keys[i]
+            if len(formated_keywords) < 100:
+                formated_keywords += ';'
+    
+        if formated_keywords[-1] == ';':
+            return formated_keywords[:-1]
+            
+    return formated_keywords
+
 def get_trends(termo, timeframe):
     '''
     Retorna os trends
@@ -76,15 +105,17 @@ def get_termos_mais_populares(nome_formal, apelido, timeframe):
     termos_relacionados_formal = get_termos_relacionados([nome_formal], timeframe)
     termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
     termos_relacionados_total = termos_relacionados_formal.append(termos_relacionados_apelido)
+    
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
     if (len(termos_relacionados_total) > 0):
         termos_relacionados_total = termos_relacionados_total.sort_values(by=['value'], ascending=False)[:3]['query']
 
     return termos_relacionados_total.values.tolist()
 
-def calcula_maximos(pop_df, apelido, nome_formal):
+def calcula_maximos(pop_df, apelido, nome_formal, keywords):
     '''
-    Calcula o máximo da pressão entre o apelido e o nome formal,
+    Calcula o máximo da pressão entre o apelido, nome formal e
+    conjunto de palavras-chave,
     entre os termos relacionados e a pressão geral
     '''
 
@@ -117,19 +148,25 @@ def write_csv_popularidade(df_path, export_path):
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
     for index, row in apelidos.iterrows():
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
-        apelido = row['apelido'].replace('(', '').replace(')', '')
+        apelido = formata_apelido(row['apelido'])
         nome_formal = row['nome_formal']
         id_ext = str(row['id_ext'])
         casa = row['casa']
         id_leggo = row['id_leggo']
         interesse = row['interesse']
+        keywords = formata_keywords(row['keywords'])
 
         print('Pesquisando a popularidade: ' + apelido + ' (interesse: ' + interesse + ')')
 
-        termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
-        termos = [unidecode(termo_rel) for termo_rel in termos_relacionados]
+        termos = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = set(termos)
+        
         pop_df = get_popularidade(list(termos), timeframe)
+
+        if keywords:
+            palavras_chave = [k for k in keywords.split(';')]
+            print(len(keywords))
+            pop_df = pop_df.append(get_popularidade(palavras_chave, timeframe))
 
         if (pop_df.empty):
             pop_df = pd.DataFrame(columns = ['id_leggo', 'id_ext', 'date', 'casa', 'interesse', nome_formal, apelido, 'isPartial', 'max_pressao_principal', 'max_pressao_rel', 'maximo_geral']) 
@@ -137,7 +174,7 @@ def write_csv_popularidade(df_path, export_path):
 
             print ('O Google nao retornou nenhum dado sobre: ' + apelido)
         else:
-            pop_df = calcula_maximos(pop_df, apelido, nome_formal)
+            pop_df = calcula_maximos(pop_df, apelido, nome_formal, keywords)
             pop_df['id_leggo'] = id_leggo
             pop_df['id_ext'] = id_ext
             pop_df['casa'] = casa
