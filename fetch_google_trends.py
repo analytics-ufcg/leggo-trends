@@ -104,7 +104,7 @@ def get_termos_mais_populares(nome_formal, apelido, keywords, timeframe):
     
     if keywords:
         termos_relacionados_keywords = get_termos_relacionados([keyword for keyword in keywords.split(";")], timeframe)
-        termos_relacionados_total.append(termos_relacionados_keywords)
+        termos_relacionados_total = termos_relacionados_total.append(termos_relacionados_keywords)
     
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
     if (len(termos_relacionados_total) > 0):
@@ -121,7 +121,7 @@ def calcula_maximos(pop_df, apelido, nome_formal, keywords):
 
     termos = pop_df
     termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
-    cols_termos_relacionados = termos.columns[~termos.columns.isin([apelido, nome_formal, keywords, 'date', 'max_pressao_principal', 'isPartial'])]
+    cols_termos_relacionados = termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]
     termos['max_pressao_rel'] = termos[cols_termos_relacionados].max(axis=1) if (len(cols_termos_relacionados) > 0) else 0
     termos['maximo_geral'] = termos[['max_pressao_rel','max_pressao_principal']].max(axis=1)
 
