@@ -15,9 +15,7 @@ generate_keywords <- function(proposicoes, interesses) {
   
   df_apelidos <- 
     prop_interesses %>% 
-    mutate(apelido = .remove_pontuacao(apelido) %>% 
-             stringr::str_replace_all("[[:space:]]{2}", " ") %>% 
-             substring(1, 85),
+    mutate(apelido = .remove_pontuacao(apelido),
            keywords = .remove_pontuacao(keywords),
            nome_formal = paste0(sigla_tipo, " ", numero, "/", lubridate::year(data_apresentacao))) %>% 
     select(id_leggo, id_ext, casa, apelido, nome_formal, apresentacao = data_apresentacao, interesse, keywords)
