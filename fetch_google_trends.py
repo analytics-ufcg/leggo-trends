@@ -47,16 +47,20 @@ def formata_keywords(keywords):
     '''
     Formata as palavtas-chave da proposição, limitando 
     seu conteúdo para o tamanho aceitado pelo pytrends
+    (100 caracteres)
     '''
 
     formated_keywords = ''
     if not pd.isna(keywords):
         keys = keywords.split(';')
-        len_keys = len(keys)
-        for i in range(len_keys):
-            formated_keywords += keys[i][:85]
-            if i < len_keys - 1:
+        for i in range(len(keys)):
+            if len(formated_keywords) + len(keys[i]) < 100:
+                formated_keywords += keys[i]
+            if len(formated_keywords) < 100:
                 formated_keywords += ';'
+    
+        if formated_keywords[-1] == ';':
+            return formated_keywords[:-1]
             
     return formated_keywords
 
@@ -92,7 +96,7 @@ def get_termos_relacionados(termo, timeframe):
 
     return related_queries_df
 
-def get_termos_mais_populares(nome_formal, apelido, keywords, timeframe):
+def get_termos_mais_populares(nome_formal, apelido, timeframe):
     '''
     De acordo com os termos relacionados ao nome formal da proposição e a seu apelido
     retorna os 3 termos mais popularidades 
@@ -101,10 +105,6 @@ def get_termos_mais_populares(nome_formal, apelido, keywords, timeframe):
     termos_relacionados_formal = get_termos_relacionados([nome_formal], timeframe)
     termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
     termos_relacionados_total = termos_relacionados_formal.append(termos_relacionados_apelido)
-    
-    if keywords:
-        termos_relacionados_keywords = get_termos_relacionados([keyword for keyword in keywords.split(";")], timeframe)
-        termos_relacionados_total = termos_relacionados_total.append(termos_relacionados_keywords)
     
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
     if (len(termos_relacionados_total) > 0):
@@ -158,15 +158,15 @@ def write_csv_popularidade(df_path, export_path):
 
         print('Pesquisando a popularidade: ' + apelido + ' (interesse: ' + interesse + ')')
 
-        termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, keywords, timeframe)
-        termos = []
-        
-        for termo in termos_relacionados:
-            if termo:
-                termos.append(unidecode(termo))
-        
+        termos = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = set(termos)
+        
         pop_df = get_popularidade(list(termos), timeframe)
+
+        if keywords:
+            palavras_chave = [k for k in keywords.split(';')]
+            print(len(keywords))
+            pop_df = pop_df.append(get_popularidade(palavras_chave, timeframe))
 
         if (pop_df.empty):
             pop_df = pd.DataFrame(columns = ['id_leggo', 'id_ext', 'date', 'casa', 'interesse', nome_formal, apelido, 'isPartial', 'max_pressao_principal', 'max_pressao_rel', 'maximo_geral']) 
