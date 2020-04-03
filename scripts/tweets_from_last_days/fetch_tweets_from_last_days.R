@@ -104,7 +104,7 @@
   }
   
   words_df <- words_df %>%
-    dplyr::select(id_leggo, id_ext, casa, query)
+    dplyr::select(id_leggo, id_ext, casa, interesse, query)
   
   return(list(queries, words_df))
 }

@@ -7,17 +7,18 @@ calculate_populatiry_score <- function(trends) {
   library(tidyverse)
   
   trends_alt <- trends %>%
-    dplyr::group_by(week) %>%
+    dplyr::group_by(week, interesse) %>%
     dplyr::mutate(total_retweets = sum(retweets),
                   total_likes = sum(favs)) %>%
     dplyr::mutate(general_popularity = (total_retweets * 7 + total_likes * 3) / 10) %>%
     dplyr::ungroup() %>%
-    dplyr::group_by(id_leggo, id_ext, casa, week) %>%
+    dplyr::group_by(id_leggo, id_ext, casa, interesse, week) %>%
     dplyr::mutate(
       popularity = (retweets * 7 + favs * 3) / 10,
       mean_popularity = popularity / general_popularity
     ) %>%
-    dplyr::select(id_leggo, id_ext, casa, date = week, mean_popularity)
+    dplyr::ungroup() %>% 
+    dplyr::select(id_leggo, id_ext, casa, interesse, date = week, mean_popularity)
   
   return(trends_alt)
 }
@@ -41,6 +42,7 @@ combine_indexes <- function(twitter_trends, pops_folderpath) {
                       .default = "d",
                       id_ext = "c",
                       id_leggo = "c",
+                      interesse = "c",
                       casa = "c",
                       isPartial = "l",
                       date = readr::col_date(format = "%Y-%m-%d"),
@@ -52,6 +54,7 @@ combine_indexes <- function(twitter_trends, pops_folderpath) {
       id_leggo, 
       id_ext,
       casa,
+      interesse,
       max_pressao_principal,
       max_pressao_rel,
       maximo_geral_perc,
@@ -63,7 +66,7 @@ combine_indexes <- function(twitter_trends, pops_folderpath) {
   
   trends <- dplyr::full_join(google_trends,
                              twitter_trends,
-                             by = c("id_leggo", "id_ext", "casa", "date")) %>%
+                             by = c("id_leggo", "id_ext", "casa", "interesse", "date")) %>%
     dplyr::mutate(
       twitter_mean_popularity = dplyr::if_else(is.na(mean_popularity), 0, mean_popularity),
       trends_max_popularity = dplyr::if_else(is.na(maximo_geral_perc), 0, maximo_geral_perc)
@@ -73,6 +76,7 @@ combine_indexes <- function(twitter_trends, pops_folderpath) {
       id_leggo, 
       id_ext,
       casa,
+      interesse,
       date,
       trends_max_pressao_principal = max_pressao_principal,
       trends_max_pressao_rel = max_pressao_rel,
