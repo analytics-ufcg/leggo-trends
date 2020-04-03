@@ -45,8 +45,8 @@ def formata_apelido(apelido):
 
 def formata_keywords(keywords):
     '''
-    Formata as palavtas-chave da proposição, limitando seu conteúdo 
-    para o tamanho aceitado pelo pytrends
+    Formata as palavtas-chave da proposição, limitando 
+    seu conteúdo para o tamanho aceitado pelo pytrends
     '''
 
     formated_keywords = ''
@@ -103,7 +103,6 @@ def get_termos_mais_populares(nome_formal, apelido, keywords, timeframe):
     termos_relacionados_total = termos_relacionados_formal.append(termos_relacionados_apelido)
     
     if keywords:
-        print("aa")
         termos_relacionados_keywords = get_termos_relacionados([keyword for keyword in keywords.split(";")], timeframe)
         termos_relacionados_total.append(termos_relacionados_keywords)
     
@@ -159,7 +158,7 @@ def write_csv_popularidade(df_path, export_path):
 
         print('Pesquisando a popularidade: ' + apelido + ' (interesse: ' + interesse + ')')
 
-        termos_relacionados = [nome_formal, apelido, keywords] + get_termos_mais_populares(nome_formal, apelido, keywords, timeframe)
+        termos_relacionados = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, keywords, timeframe)
         termos = []
         
         for termo in termos_relacionados:
