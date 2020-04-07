@@ -35,14 +35,21 @@
 .filter_active_users <- function(usernames_list) {
   library(tidyverse)
   
-  users_df <- rtweet::lookup_users(usernames_list) %>%
+  users_df <-
+    rtweet::lookup_users(usernames_list, token = rtweet::get_token()) %>%
     rtweet::tweets_data()
   
   last_30_days <- Sys.Date() - 30
   
-  active_users <- users_df %>%
-    dplyr::filter(created_at >= last_30_days) %>%
-    dplyr::select(user_id, username = screen_name)
+  if (nrow(users_df) > 0) {
+    active_users <- users_df %>%
+      dplyr::filter(created_at >= last_30_days) %>%
+      dplyr::select(user_id, username = screen_name)
+    
+    
+  } else {
+    active_users <- tibble::tibble()
+  }
   
   return(active_users)
 }
@@ -56,9 +63,18 @@
 .process_functions_inputs <- function(words_df) {
   library(tidyverse)
   
-  active_users <- .get_parliamentarians_usernames() %>%
+  parliamentarians_usernames <- .get_parliamentarians_usernames()
+  
+  active_users <- parliamentarians_usernames %>%
     dplyr::pull(twitter) %>%
-    .filter_active_users() %>%
+    .filter_active_users()
+  
+  if (nrow(active_users) == 0) {
+    active_users <- parliamentarians_usernames %>%
+      dplyr::select(username = twitter)
+  }
+  
+  active_users <- active_users %>%
     dplyr::mutate(query = paste0("from:", username))
   
   queries <- active_users %>%
@@ -88,7 +104,7 @@
   }
   
   words_df <- words_df %>%
-    dplyr::select(id_leggo, id_ext, casa, query)
+    dplyr::select(id_leggo, id_ext, casa, interesse, query)
   
   return(list(queries, words_df))
 }
@@ -102,7 +118,11 @@
   
   tweets_alt <- tweets %>%
     dplyr::mutate(processed_text = iconv(tolower(text), to = "ASCII//TRANSLIT")) %>%
-    dplyr::select(status_id, favorite_count, retweet_count, processed_text, week)
+    dplyr::select(status_id,
+                  favorite_count,
+                  retweet_count,
+                  processed_text,
+                  week)
   
   df <- tweets_alt %>%
     fuzzyjoin::regex_inner_join(words_query, by = c(processed_text = "query")) %>%
@@ -119,16 +139,26 @@ search_last_tweets <- function(words_df) {
   library(tidyverse)
   options(lubridate.week.start = 1)
   
+  readRenviron(".env")
+  
+  leggoTrends::generate_token(
+    Sys.getenv("APP_NAME"),
+    Sys.getenv("TWITTER_ACCESS_TOKEN"),
+    Sys.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
+    Sys.getenv("TWITTER_API_KEY"),
+    Sys.getenv("TWITTER_API_SECRET_KEY")
+  )
+  
   processed_inputs <- .process_functions_inputs(words_df)
   
   queries <- processed_inputs[[1]]
   words_query <- processed_inputs[[2]]
   
   tweets <-
-    purrr::map_df(queries$authors_query, ~ leggoTrends::get_tweets(.x)) %>% 
+    purrr::map_df(queries$authors_query, ~ leggoTrends::get_tweets(.x)) %>%
     dplyr::mutate(week = lubridate::floor_date(as.Date(created_at), "week"))
   
-  filtered_tweets <- .filter_tweets(tweets, words_query) %>% 
+  filtered_tweets <- .filter_tweets(tweets, words_query) %>%
     dplyr::distinct()
   
   return(filtered_tweets)

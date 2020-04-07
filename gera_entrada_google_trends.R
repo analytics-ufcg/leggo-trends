@@ -3,7 +3,7 @@ library(lubridate)
 
 .HELP <- "
 Usage:
-Rscript gera_entrada_google_trends.R -p <proposicoes_filepath> -a <apelidos_filepath> 
+Rscript gera_entrada_google_trends.R -p <proposicoes_filepath> -i <interesses_filePath> -a <apelidos_filepath> 
 "
 
 #' @title Get arguments from command line option parsing
@@ -14,12 +14,17 @@ get_args <- function() {
   option_list = list(
     optparse::make_option(c("-p", "--proposicoes_filepath"), 
                           type="character", 
-                          default="exported/proposicoes.csv",
+                          default="data/proposicoes.csv",
+                          help=.HELP, 
+                          metavar="character"),
+    optparse::make_option(c("-i", "--interesses_filepath"), 
+                          type="character", 
+                          default="data/interesses.csv",
                           help=.HELP, 
                           metavar="character"),
     optparse::make_option(c("-a", "--apelidos_filepath"), 
                           type="character", 
-                          default="exported/apelidos.csv",
+                          default="data/apelidos.csv",
                           help=.HELP, 
                           metavar="character"),
     optparse::make_option(c("-f", "--update_flag"), 
@@ -39,6 +44,7 @@ args <- get_args()
 print(args)
 
 proposicoes_filepath <- args$proposicoes_filepath
+interesses_filepath <- args$interesses_filepath
 apelidos_filepath <- args$apelidos_filepath
 update_flag <- args$update_flag
 
@@ -47,16 +53,11 @@ if (update_flag == 1 | !file.exists(apelidos_filepath)) {
   
   source(here::here("scripts/keywords/generate_keywords.R"))
   
-  proposicao <- read_csv(proposicoes_filepath,
-                         col_types = list(
-                           .default = readr::col_character(),
-                           id_leggo = readr::col_double(),
-                           id_ext = readr::col_double(),
-                           data_apresentacao = readr::col_datetime(format = "")
-                         ))
-  df_google_trends <- generate_keywords(proposicao)
+  proposicoes <- read_csv(proposicoes_filepath)
+  interesses <- read_csv(interesses_filepath)
+  df_apelidos <- generate_keywords(proposicoes, interesses)
   
-  write_csv(df_google_trends, apelidos_filepath)
+  write_csv(df_apelidos, apelidos_filepath)
   
   cat("Feito!\n")
 }

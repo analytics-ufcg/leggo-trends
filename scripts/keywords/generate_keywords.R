@@ -2,19 +2,23 @@
 #' @description A partir do dataframe de proposições, retorna um dataframe contendo as colunas
 #' nome_formal e apelido processadas.
 #' @param proposicoes Dataframe de proposições
+#' @param interesses Dataframe de interesses
 #' @return Dataframe com apelido e nome formal processadas.
-generate_keywords <- function(proposicoes) {
+generate_keywords <- function(proposicoes, interesses) {
   library(tidyverse)
+  source(here::here("scripts/utils/utils.R"))
   
-  df_google_trends <- 
-    proposicoes %>% 
-    rename(apresentacao = data_apresentacao) %>% 
-    mutate(nome_formal = paste0(sigla_tipo, " ", numero, "/", lubridate::year(apresentacao)),
-           apelido = iconv(apelido, from="UTF-8", to="ASCII//TRANSLIT")) %>% 
-    select(id_leggo, apelido, nome_formal, apresentacao, id_ext, casa) %>% 
-    group_by(apelido) %>% 
-    arrange(apelido, desc(apresentacao)) %>%  
-    slice(n())
+  prop_interesses <- proposicoes %>% 
+    left_join(interesses %>% 
+                select(id_leggo, interesse, apelido, keywords), 
+              by = c("id_leggo"))
   
-  return(df_google_trends)
+  df_apelidos <- 
+    prop_interesses %>% 
+    mutate(apelido = .remove_pontuacao(apelido),
+           keywords = .remove_pontuacao(keywords),
+           nome_formal = paste0(sigla_tipo, " ", numero, "/", lubridate::year(data_apresentacao))) %>% 
+    select(id_leggo, id_ext, casa, apelido, nome_formal, apresentacao = data_apresentacao, interesse, keywords)
+  
+  return(df_apelidos)
 }

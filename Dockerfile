@@ -14,7 +14,7 @@ RUN R -e "install.packages('here',dependencies=TRUE, repos='http://cran.rstudio.
 RUN R -e "install.packages('fuzzyjoin',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('ekstroem/MESS')"
 RUN R -e "devtools::install_github('ropensci/rtweet')"
-RUN R -e "devtools::install()"
+RUN R -e "devtools::install_github('analytics-ufcg/rcongresso')"
 
 RUN apt-get install -y python3-pip
 
@@ -23,7 +23,4 @@ RUN pip3 install git+https://github.com/GeneralMills/pytrends
 RUN pip3 install unidecode
 
 COPY . .
-
 RUN R -e "devtools::install()"
-
-CMD Rscript gera_entrada_google_trends.R -p data/proposicoes.csv -a data/apelidos.csv && python3 fetch_google_trends.py data/apelidos.csv data/pops/

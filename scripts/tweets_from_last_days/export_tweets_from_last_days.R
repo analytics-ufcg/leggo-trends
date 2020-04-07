@@ -3,7 +3,7 @@ library(magrittr)
 library(tidyverse)
 
 source(here::here("scripts/tweets_from_last_days/fetch_tweets_from_last_days.R"))
-source(here::here("scripts/tweets_from_last_days/process_popularity.R"))
+source(here::here("scripts/popularity/process_popularity.R"))
 
 if(!require(optparse)){
   install.packages("optparse")
@@ -35,9 +35,7 @@ data_path <- opt$out
 
 ## Read PLs list
 if (!file.exists(pls_words_filepath)) {
-  cat("Arquivo com os apelidos não encontrado. Gerando arquivo...")
-  source(here::here("scripts/keywords/generate_keywords.R"))
-  words_df <- generate_keywords(readr::read_csv(here::here("data/proposicoes.csv")))
+  stop("Arquivo com os apelidos não encontrado. Execute o script gera_entrada_google_trends.R")
   
 } else {
   words_df <- readr::read_csv(pls_words_filepath)
@@ -47,7 +45,7 @@ cat("Gerando dados de tweets sobre proposições e os de trends (sumarizado por 
 new_tweets <- search_last_tweets(words_df) %>%
   dplyr::mutate_all(~ as.character(.))
 
-trends <- leggoTrends::generate_twitter_trends(new_tweets) %>% 
+trends <- leggoTrends::generate_twitter_trends(new_tweets) %>%
   calculate_populatiry_score()
 
 write_csv(new_tweets, paste0(data_path, "/tweets.csv"))
