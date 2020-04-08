@@ -41,8 +41,6 @@ def formata_apelido(apelido):
     para o tamanho aceitado pelo pytrends
     '''
 
-    if 
-
     return apelido[:85] if not pd.isna(apelido) else ''
 
 def formata_keywords(keywords):
@@ -125,7 +123,7 @@ def calcula_maximos(pop_df, apelido, nome_formal, keywords):
 
     termos = pop_df
     termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
-    
+
     if apelido:
         cols_names = [apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial']
     else:
