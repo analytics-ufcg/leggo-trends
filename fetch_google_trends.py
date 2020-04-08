@@ -41,7 +41,9 @@ def formata_apelido(apelido):
     para o tamanho aceitado pelo pytrends
     '''
 
-    return apelido[:85]
+    if 
+
+    return apelido[:85] if not pd.isna(apelido) else ''
 
 def formata_keywords(keywords):
     '''
@@ -102,9 +104,11 @@ def get_termos_mais_populares(nome_formal, apelido, timeframe):
     retorna os 3 termos mais popularidades 
     '''
 
-    termos_relacionados_formal = get_termos_relacionados([nome_formal], timeframe)
-    termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
-    termos_relacionados_total = termos_relacionados_formal.append(termos_relacionados_apelido)
+    termos_relacionados_total = get_termos_relacionados([nome_formal], timeframe)
+
+    if apelido:
+        termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
+        termos_relacionados_total = termos_relacionados_total.append(termos_relacionados_apelido)
     
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
     if (len(termos_relacionados_total) > 0):
@@ -121,7 +125,13 @@ def calcula_maximos(pop_df, apelido, nome_formal, keywords):
 
     termos = pop_df
     termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
-    cols_termos_relacionados = termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]
+    
+    if apelido:
+        cols_names = [apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial']
+    else:
+        cols_names = [nome_formal, 'date', 'max_pressao_principal', 'isPartial']
+
+    cols_termos_relacionados = termos.columns[~termos.columns.isin(cols_names)]
     termos['max_pressao_rel'] = termos[cols_termos_relacionados].max(axis=1) if (len(cols_termos_relacionados) > 0) else 0
     termos['maximo_geral'] = termos[['max_pressao_rel','max_pressao_principal']].max(axis=1)
 
@@ -158,7 +168,12 @@ def write_csv_popularidade(df_path, export_path):
 
         print('Pesquisando a popularidade: ' + apelido + ' (interesse: ' + interesse + ')')
 
-        termos = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
+        if apelido:
+            query = [nome_formal, apelido]
+        else:
+            query = [nome_formal]
+
+        termos = query + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = set(termos)
         
         pop_df = get_popularidade(list(termos), timeframe)
