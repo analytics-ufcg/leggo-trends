@@ -41,7 +41,7 @@ def formata_apelido(apelido):
     para o tamanho aceitado pelo pytrends
     '''
 
-    return apelido[:85]
+    return apelido[:85] if not pd.isna(apelido) else ''
 
 def formata_keywords(keywords):
     '''
@@ -102,9 +102,11 @@ def get_termos_mais_populares(nome_formal, apelido, timeframe):
     retorna os 3 termos mais popularidades 
     '''
 
-    termos_relacionados_formal = get_termos_relacionados([nome_formal], timeframe)
-    termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
-    termos_relacionados_total = termos_relacionados_formal.append(termos_relacionados_apelido)
+    termos_relacionados_total = get_termos_relacionados([nome_formal], timeframe)
+
+    if apelido:
+        termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
+        termos_relacionados_total = termos_relacionados_total.append(termos_relacionados_apelido)
     
     termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
     if (len(termos_relacionados_total) > 0):
@@ -120,8 +122,15 @@ def calcula_maximos(pop_df, apelido, nome_formal, keywords):
     '''
 
     termos = pop_df
-    termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
-    cols_termos_relacionados = termos.columns[~termos.columns.isin([apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial'])]
+
+    if apelido:
+        termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
+        cols_names = [apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial']
+    else:
+        termos['max_pressao_principal'] = termos[nome_formal]
+        cols_names = [nome_formal, 'date', 'max_pressao_principal', 'isPartial']
+
+    cols_termos_relacionados = termos.columns[~termos.columns.isin(cols_names)]
     termos['max_pressao_rel'] = termos[cols_termos_relacionados].max(axis=1) if (len(cols_termos_relacionados) > 0) else 0
     termos['maximo_geral'] = termos[['max_pressao_rel','max_pressao_principal']].max(axis=1)
 
@@ -156,23 +165,53 @@ def write_csv_popularidade(df_path, export_path):
         interesse = row['interesse']
         keywords = formata_keywords(row['keywords'])
 
-        print('Pesquisando a popularidade: ' + apelido + ' (interesse: ' + interesse + ')')
+       
+        if apelido:
+            nome = apelido
+            query = [nome_formal, apelido]
+            cols_names = [
+                'id_leggo', 
+                'id_ext', 
+                'date', 
+                'casa', 
+                'interesse', 
+                nome_formal, 
+                apelido, 
+                'isPartial', 
+                'max_pressao_principal', 
+                'max_pressao_rel', 
+                'maximo_geral']
+        else:
+            nome = nome_formal
+            query = [nome_formal]
+            cols_names = [
+                'id_leggo', 
+                'id_ext', 
+                'date', 
+                'casa', 
+                'interesse', 
+                nome_formal,
+                'isPartial', 
+                'max_pressao_principal', 
+                'max_pressao_rel', 
+                'maximo_geral']
 
-        termos = [nome_formal, apelido] + get_termos_mais_populares(nome_formal, apelido, timeframe)
+        print('Pesquisando a popularidade: ' + nome + ' (interesse: ' + interesse + ')')
+
+        termos = query + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = set(termos)
         
         pop_df = get_popularidade(list(termos), timeframe)
 
         if keywords:
             palavras_chave = [k for k in keywords.split(';')]
-            print(len(keywords))
             pop_df = pop_df.append(get_popularidade(palavras_chave, timeframe))
 
         if (pop_df.empty):
-            pop_df = pd.DataFrame(columns = ['id_leggo', 'id_ext', 'date', 'casa', 'interesse', nome_formal, apelido, 'isPartial', 'max_pressao_principal', 'max_pressao_rel', 'maximo_geral']) 
+            pop_df = pd.DataFrame(columns = cols_names) 
             props_sem_popularidade += 1
 
-            print ('O Google nao retornou nenhum dado sobre: ' + apelido)
+            print ('O Google nao retornou nenhum dado sobre: ' + nome)
         else:
             pop_df = calcula_maximos(pop_df, apelido, nome_formal, keywords)
             pop_df['id_leggo'] = id_leggo
