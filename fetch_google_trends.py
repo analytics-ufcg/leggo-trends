@@ -7,6 +7,7 @@ from datetime import timedelta
 from unidecode import unidecode
 import sys
 from pathlib import Path
+import shutil
 
 def print_usage():
     '''
@@ -148,6 +149,16 @@ def agrupa_por_semana(pop_df):
 
     return pop_df
 
+def create_directory(export_path):
+    path = Path(export_path)
+    if path.exists():
+        try:
+            shutil.rmtree(export_path)
+        except OSError as e:
+            print("Erro ao esvaziar pasta destino: %s." % (e.strerror))
+    
+    path.mkdir(exist_ok=True)
+
 def write_csv_popularidade(df_path, export_path):
     '''
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
@@ -238,7 +249,7 @@ if __name__ == "__main__":
 
     pytrend = TrendReq()
 
-    Path(export_path).mkdir(exist_ok=True)
+    create_directory(export_path)
 
     write_csv_popularidade(df_path, export_path)
 
