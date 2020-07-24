@@ -2,6 +2,7 @@
 
 import pandas as pd
 from pytrends.request import TrendReq
+import time
 from datetime import date, datetime
 from datetime import timedelta
 from unidecode import unidecode
@@ -167,6 +168,7 @@ def write_csv_popularidade(df_path, export_path):
     props_sem_popularidade = 0
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
     for index, row in apelidos.iterrows():
+        time.sleep(60)
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
         apelido = formata_apelido(row['apelido'])
         nome_formal = row['nome_formal']
@@ -232,6 +234,7 @@ def write_csv_popularidade(df_path, export_path):
             pop_df = agrupa_por_semana(pop_df)
             
         pop_df.to_csv(export_path + 'pop_' + str(id_leggo) + '_' + str(interesse) + '.csv', encoding='utf8', index=False)
+
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
 
