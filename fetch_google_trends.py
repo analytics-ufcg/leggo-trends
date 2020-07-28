@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 import shutil
 
+
 def print_usage():
     '''
     Função que printa a chamada correta em caso de o usuário passar o número errado
@@ -164,11 +165,18 @@ def write_csv_popularidade(df_path, export_path):
     '''
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
+    waiting_time = 2
+    counter = 0
 
     props_sem_popularidade = 0
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
     for index, row in apelidos.iterrows():
-        time.sleep(60)
+        
+
+        time.sleep(waiting_time)
+        counter += 1
+        waiting_time = 2 + 1.0065**counter
+
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
         apelido = formata_apelido(row['apelido'])
         nome_formal = row['nome_formal']
