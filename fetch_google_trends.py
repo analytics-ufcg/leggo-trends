@@ -176,7 +176,7 @@ def write_csv_popularidade(df_path, export_path):
 
         time.sleep(waiting_time)
         counter += 1
-        if waiting_time < max_time
+        if waiting_time < max_time:
             waiting_time = 2 + 1.0065**counter
 
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
