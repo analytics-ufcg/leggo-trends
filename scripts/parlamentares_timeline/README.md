@@ -9,7 +9,7 @@ Para a obtenção dessas informações, utilizamos uma [planilha](https://docs.g
 Para baixar esses dados, basta estar neste diretório e digitar o código abaixo no terminal:
 
 ```
-Rscript expport_parlamentares_timeline.R -o <arquivo_destino.csv>
+Rscript export_parlamentares_timeline.R -o <arquivo_destino.csv>
 ```
 
 - O parâmetro -o corresponde ao caminho e nome do arquivo com os dados de saída do script. Se não for passado nenhum valor, o csv será salvo em `data/timelines.csv`.
