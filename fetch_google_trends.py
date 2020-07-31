@@ -166,7 +166,7 @@ def write_csv_popularidade(df_path, export_path):
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
     waiting_time = 2
-    max_time = 100
+    max_time = 70
     counter = 0
 
     props_sem_popularidade = 0
@@ -260,7 +260,7 @@ if __name__ == "__main__":
     df_path = sys.argv[1]
     export_path = sys.argv[2]
 
-    pytrend = TrendReq()
+    pytrend = TrendReq(timeout=300)
 
     create_directory(export_path)
 
