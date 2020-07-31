@@ -221,6 +221,8 @@ def write_csv_popularidade(df_path, export_path):
 
         print('Pesquisando a popularidade: ' + nome + ' (interesse: ' + interesse + ')')
 
+        print('Pesquisa nº: ' + str(counter) + ', Tempo de espera: ' + str(waiting_time) + ' s')
+
         termos = query + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = set(termos)
         
