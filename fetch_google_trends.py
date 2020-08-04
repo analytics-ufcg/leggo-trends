@@ -166,7 +166,7 @@ def write_csv_popularidade(df_path, export_path):
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
     waiting_time = 2
-    max_time = 60
+    max_time = 70
     counter = 0
 
     props_sem_popularidade = 0
@@ -177,7 +177,7 @@ def write_csv_popularidade(df_path, export_path):
         time.sleep(waiting_time)
         counter += 1
         if waiting_time < max_time:
-            waiting_time = 2 + 1.0044**counter
+            waiting_time = 9 + 1.0045**counter
 
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
         apelido = formata_apelido(row['apelido'])
