@@ -166,7 +166,7 @@ def write_csv_popularidade(df_path, export_path):
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
     waiting_time = 2
-    max_time = 70
+    max_time = 45
     counter = 0
 
     props_sem_popularidade = 0
