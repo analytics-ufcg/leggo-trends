@@ -44,6 +44,14 @@ def formata_apelido(apelido):
 
     return apelido[:85] if not pd.isna(apelido) else ''
 
+def formata_nome_formal(nome_formal):
+    '''
+    Formata o nome da proposição para não incluir o ano de 
+    criação
+    '''
+
+    return nome_formal.split("/", maxsplit=1)[0]
+
 def formata_keywords(keywords):
     '''
     Formata as palavtas-chave da proposição, limitando 
@@ -193,7 +201,7 @@ def write_csv_popularidade(df_path, export_path):
                 'max_pressao_rel', 
                 'maximo_geral']
         else:
-            nome = nome_formal
+            nome = formata_nome_formal(nome_formal)
             query = [nome_formal]
             cols_names = [
                 'id_leggo', 
@@ -212,6 +220,8 @@ def write_csv_popularidade(df_path, export_path):
         termos = query + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = set(termos)
         
+        print('Nome formal: %s TimeFrame: %s termos: %s keyworkds: %s' %(nome, timeframe, termos, keywords))
+
         pop_df = get_popularidade(list(termos), timeframe)
 
         if keywords:
