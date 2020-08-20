@@ -2,12 +2,13 @@
 
 import pandas as pd
 from pytrends.request import TrendReq
-from datetime import date, datetime
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from unidecode import unidecode
 import sys
 from pathlib import Path
 import shutil
+import re
+import time
 
 def print_usage():
     '''
@@ -50,7 +51,13 @@ def formata_nome_formal(nome_formal):
     criação
     '''
 
-    return nome_formal.split("/", maxsplit=1)[0]
+    # Separa nome e ano
+    nome_separado = nome_formal.split("/", maxsplit=1)[0]
+
+    # Formata para MPV ser MP
+    nome_separado = re.sub('MPV', 'MP', nome_separado)
+
+    return nome_separado
 
 def formata_keywords(keywords):
     '''
@@ -73,12 +80,12 @@ def formata_keywords(keywords):
             
     return formated_keywords
 
-def get_trends(termo, timeframe):
+def get_trends(termos, timeframe):
     '''
     Retorna os trends
     '''
-
-    pytrend.build_payload(termo, cat=0, timeframe=timeframe, geo='BR', gprop='')
+    
+    pytrend.build_payload(termos, cat=0, timeframe=timeframe, geo='BR', gprop='')
  
 def get_popularidade(termo, timeframe):
     '''
@@ -90,57 +97,22 @@ def get_popularidade(termo, timeframe):
 
     return pytrend.interest_over_time()
 
-def get_termos_relacionados(termo, timeframe):
+def calcula_maximos(pop_df, termos_base):
     '''
-    Retorna os termos relacionados a um termo passado
-    em um período de tempo especificado
-    '''
-
-    get_trends(termo, timeframe)
-    related_queries_dict = pytrend.related_queries()
-    if (len(related_queries_dict) == 0):
-        return pd.DataFrame()
-
-    related_queries_df = pd.DataFrame.from_dict(related_queries_dict[termo[0]]['top'])[:3]
-
-    return related_queries_df
-
-def get_termos_mais_populares(nome_formal, apelido, timeframe):
-    '''
-    De acordo com os termos relacionados ao nome formal da proposição e a seu apelido
-    retorna os 3 termos mais popularidades 
-    '''
-
-    termos_relacionados_total = get_termos_relacionados([nome_formal], timeframe)
-
-    if apelido:
-        termos_relacionados_apelido = get_termos_relacionados([apelido], timeframe)
-        termos_relacionados_total = termos_relacionados_total.append(termos_relacionados_apelido)
-    
-    termos_relacionados_total = termos_relacionados_total.drop_duplicates(subset ="query")
-    if (len(termos_relacionados_total) > 0):
-        termos_relacionados_total = termos_relacionados_total.sort_values(by=['value'], ascending=False)[:3]['query']
-
-    return termos_relacionados_total.values.tolist()
-
-def calcula_maximos(pop_df, apelido, nome_formal, keywords):
-    '''
-    Calcula o máximo da pressão entre o apelido, nome formal e
-    conjunto de palavras-chave,
-    entre os termos relacionados e a pressão geral
+    Calcula o máximo de pressão entre termos principais e relacionados
     '''
 
     termos = pop_df
 
-    if apelido:
-        termos['max_pressao_principal'] = termos[[apelido,nome_formal]].max(axis=1)
-        cols_names = [apelido, nome_formal, 'date', 'max_pressao_principal', 'isPartial']
-    else:
-        termos['max_pressao_principal'] = termos[nome_formal]
-        cols_names = [nome_formal, 'date', 'max_pressao_principal', 'isPartial']
+    # Calcula o máximo da pressão baseada nos termos principais
+    termos['max_pressao_principal'] = termos[termos_base].max(axis=1)
+    cols_names = termos_base + ['date', 'max_pressao_principal', 'isPartial']
 
+    # Calcula o máximo de pressão baseada nos termos relacioados
     cols_termos_relacionados = termos.columns[~termos.columns.isin(cols_names)]
     termos['max_pressao_rel'] = termos[cols_termos_relacionados].max(axis=1) if (len(cols_termos_relacionados) > 0) else 0
+
+    # calcula o máximo de pressão entre termos principais e relacionados
     termos['maximo_geral'] = termos[['max_pressao_rel','max_pressao_principal']].max(axis=1)
 
     return termos
@@ -172,78 +144,71 @@ def write_csv_popularidade(df_path, export_path):
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
 
+    tempo_entre_req = 60
     props_sem_popularidade = 0
+
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
+
     for index, row in apelidos.iterrows():
+
+        # timeframe de até 6 meses da data de execução do script
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
-        apelido = formata_apelido(row['apelido'])
+
         nome_formal = row['nome_formal']
         id_ext = str(row['id_ext'])
         casa = row['casa']
         id_leggo = row['id_leggo']
         interesse = row['interesse']
-        keywords = formata_keywords(row['keywords'])
 
-       
-        if apelido:
-            nome = apelido
-            query = [nome_formal, apelido]
-            cols_names = [
-                'id_leggo', 
-                'id_ext', 
-                'date', 
-                'casa', 
-                'interesse', 
-                nome_formal, 
-                apelido, 
-                'isPartial', 
-                'max_pressao_principal', 
-                'max_pressao_rel', 
-                'maximo_geral']
-        else:
-            nome = formata_nome_formal(nome_formal)
-            query = [nome_formal]
-            cols_names = [
-                'id_leggo', 
-                'id_ext', 
-                'date', 
-                'casa', 
-                'interesse', 
-                nome_formal,
-                'isPartial', 
-                'max_pressao_principal', 
-                'max_pressao_rel', 
-                'maximo_geral']
+        # separa o nome da proposição do ano e trata MPVs
+        nome_simples = formata_nome_formal(nome_formal) 
+ 
+        # Cria conjunto de termos e adiciona aspas
+        termos = [nome_simples]
+        termos = ['"' + termo + '"' for termo in termos]
 
-        print('Pesquisando a popularidade: ' + nome + ' (interesse: ' + interesse + ')')
+        # Recupera as informações de popularidade a partir dos termos
+        pop_df = get_popularidade(termos, timeframe)
 
-        termos = query + get_termos_mais_populares(nome_formal, apelido, timeframe)
-        termos = set(termos)
-        
-        print('Nome formal: %s TimeFrame: %s termos: %s keyworkds: %s' %(nome, timeframe, termos, keywords))
-
-        pop_df = get_popularidade(list(termos), timeframe)
-
-        if keywords:
-            palavras_chave = [k for k in keywords.split(';')]
-            pop_df = pop_df.append(get_popularidade(palavras_chave, timeframe))
-
+        # Caso da proposição sem popularidade
         if (pop_df.empty):
+        
+            print('Nome: %s TimeFrame: %s termos: %s sem informações do trends' %(nome_formal, timeframe, termos))
+
+            cols_names = [
+                'id_leggo',
+                'id_ext',
+                'date',
+                'casa',
+                'interesse',
+                nome_formal,
+                'isPartial',
+                'max_pressao_principal',
+                'max_pressao_rel',
+                'maximo_geral']
+            
             pop_df = pd.DataFrame(columns = cols_names) 
             props_sem_popularidade += 1
 
-            print ('O Google nao retornou nenhum dado sobre: ' + nome)
         else:
-            pop_df = calcula_maximos(pop_df, apelido, nome_formal, keywords)
+            print('Nome: %s TimeFrame: %s termos: %s com popularidade' %(nome_formal, timeframe, termos))
+
+            pop_df = calcula_maximos(pop_df, termos)
             pop_df['id_leggo'] = id_leggo
             pop_df['id_ext'] = id_ext
             pop_df['casa'] = casa
             pop_df['interesse'] = interesse
             pop_df = agrupa_por_semana(pop_df)
-            
-        pop_df.to_csv(export_path + 'pop_' + str(id_leggo) + '_' + str(interesse) + '.csv', encoding='utf8', index=False)
+
+        # Escreve resultado da consulta para uma proposição
+        filename = export_path + 'pop_' + str(id_leggo) + '_' + str(interesse) + '.csv'
+        pop_df.to_csv(filename, encoding='utf8', index=False)
+
+        # Esperando para a próxima consulta do trends
+        time.sleep(tempo_entre_req)
+
     if (props_sem_popularidade > 0):
-        print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
+        print('Não foi possível retornar a popularidade de %s / %s proposições' %(props_sem_popularidade, len(apelidos))) 
 
 if __name__ == "__main__":
     # Argumentos que o programa deve receber:
@@ -257,7 +222,7 @@ if __name__ == "__main__":
     df_path = sys.argv[1]
     export_path = sys.argv[2]
 
-    pytrend = TrendReq()
+    pytrend = TrendReq(timeout=(10,25), retries=5, backoff_factor=2)
 
     create_directory(export_path)
 
