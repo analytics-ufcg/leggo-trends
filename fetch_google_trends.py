@@ -3,6 +3,8 @@
 import pandas as pd
 from pytrends.request import TrendReq
 from datetime import date, datetime
+import os
+import datetime
 from datetime import timedelta
 from unidecode import unidecode
 import sys
@@ -150,14 +152,23 @@ def agrupa_por_semana(pop_df):
     return pop_df
 
 def create_directory(export_path):
-    path = Path(export_path)
-    if path.exists():
+    now = datetime.datetime.today() 
+    timestamp_str = now.strftime("%d-%m-%Y_%H-%M-%S")
+    dest_path = os.path.join(export_path+timestamp_str)
+    backup_path = ('./data/pops')
+
+    if not os.path.exists(dest_path):
         try:
-            shutil.rmtree(export_path)
-        except OSError as e:
-            print("Erro ao esvaziar pasta destino: %s." % (e.strerror))
-    
-    path.mkdir(exist_ok=True)
+            os.makedirs(dest_path)
+        except OSError as e: 
+            print("Erro ao criar diretório: %s." %(e.strerror))
+
+    for filename in os.listdir(backup_path):
+            try: 
+                full_file_name = os.path.join(backup_path, filename)
+                shutil.copy2(full_file_name,dest_path)
+            except OSError as e:
+                print("Erro ao copiar arquivos do diretório: %s." %(e.strerror))
 
 def write_csv_popularidade(df_path, export_path):
     '''
