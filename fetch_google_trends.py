@@ -2,6 +2,7 @@
 
 import pandas as pd
 from pytrends.request import TrendReq
+from pytrends.exceptions import ResponseError
 from datetime import date, datetime, timedelta
 from unidecode import unidecode
 import sys
@@ -9,6 +10,7 @@ from pathlib import Path
 import shutil
 import re
 import time
+import random
 
 def print_usage():
     '''
@@ -167,15 +169,8 @@ def write_csv_popularidade(df_path, export_path):
         termos = [nome_simples]
         termos = ['"' + termo + '"' for termo in termos]
 
-        # Recupera as informações de popularidade a partir dos termos
-        pop_df = get_popularidade(termos, timeframe)
-
-        # Caso da proposição sem popularidade
-        if (pop_df.empty):
-        
-            print('Nome: %s TimeFrame: %s termos: %s sem informações do trends' %(nome_formal, timeframe, termos))
-
-            cols_names = [
+        # Inicializa o dataframe
+        cols_names = [
                 'id_leggo',
                 'id_ext',
                 'date',
@@ -186,8 +181,28 @@ def write_csv_popularidade(df_path, export_path):
                 'max_pressao_principal',
                 'max_pressao_rel',
                 'maximo_geral']
-            
-            pop_df = pd.DataFrame(columns = cols_names) 
+
+        pop_df = pd.DataFrame(columns = cols_names)
+
+        # Tenta recupera a popularidade até 5 vezes
+        for n in range(0, 5):
+            try:
+                print('Tentativa %s de coletar a popularidade da proposição %s da agenda %s' %(n+1, nome_formal, interesse))
+                # Recupera as informações de popularidade a partir dos termos
+                pop_df = get_popularidade(termos, timeframe)
+                break
+    
+            except ResponseError as error:
+                print(error.args)
+                time.sleep((2 ** n) + random.random())
+
+        # Recupera as informações de popularidade a partir dos termos
+        pop_df = get_popularidade(termos, timeframe)
+
+        # Caso da proposição sem popularidade
+        if (pop_df.empty):
+        
+            print('Nome: %s TimeFrame: %s termos: %s sem informações do trends' %(nome_formal, timeframe, termos))
             props_sem_popularidade += 1
 
         else:
@@ -205,7 +220,7 @@ def write_csv_popularidade(df_path, export_path):
         pop_df.to_csv(filename, encoding='utf8', index=False)
 
         # Esperando para a próxima consulta do trends
-        time.sleep(tempo_entre_req)
+        time.sleep(tempo_entre_req + random.random())
 
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de %s / %s proposições' %(props_sem_popularidade, len(apelidos))) 
@@ -222,7 +237,7 @@ if __name__ == "__main__":
     df_path = sys.argv[1]
     export_path = sys.argv[2]
 
-    pytrend = TrendReq(timeout=(10,25), retries=5, backoff_factor=2)
+    pytrend = TrendReq(timeout=(10,25))
 
     create_directory(export_path)
 
