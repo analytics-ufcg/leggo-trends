@@ -152,10 +152,10 @@ def agrupa_por_semana(pop_df):
     return pop_df
 
 def create_directory(export_path):
+
     now = datetime.datetime.today() 
-    timestamp_str = now.strftime("%d-%m-%Y_%H-%M-%S")
+    timestamp_str = now.strftime("%d-%m-%Y")
     dest_path = os.path.join(export_path+timestamp_str)
-    backup_path = ('./data/pops')
 
     if not os.path.exists(dest_path):
         try:
@@ -163,12 +163,28 @@ def create_directory(export_path):
         except OSError as e: 
             print("Erro ao criar diretório: %s." %(e.strerror))
 
-    for filename in os.listdir(backup_path):
+    keep_last_historics(export_path)
+
+    for filename in os.listdir(export_path):
             try: 
-                full_file_name = os.path.join(backup_path, filename)
+                full_file_name = os.path.join(export_path, filename)
                 shutil.copy2(full_file_name,dest_path)
             except OSError as e:
                 print("Erro ao copiar arquivos do diretório: %s." %(e.strerror))
+    
+
+def keep_last_historics(dest_path):
+    # dest_path = 'C:/home/rebeca/LEGGOS/leggoTrends/abalone'
+    backups_to_keep=3
+    count = 0
+        for dir in os.walk(dest_path):
+            for dir in files
+            count +=1
+            print(dir)
+            if(count > backups_to_keep):
+                os.rmdir(dir)
+    
+    #  se for mais de 3 apaga pela data 
 
 def write_csv_popularidade(df_path, export_path):
     '''
