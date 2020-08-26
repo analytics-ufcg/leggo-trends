@@ -161,12 +161,30 @@ def create_directory(export_path):
         except OSError as e: 
             print("Erro ao criar diretório: %s." %(e.strerror))
 
+    keep_last_dir(export_path, dest_path)
+
     for filename in os.listdir(export_path):
             try: 
                 full_file_name = os.path.join(export_path, filename)
                 shutil.copy2(full_file_name,dest_path)
             except OSError as e:
                 print("Erro ao copiar arquivos do diretório: %s." %(e.strerror))
+
+def keep_last_dir(export_path, dest_path):
+    dirs_to_keep=3
+    diretory_creation_times = {}
+    count = 0
+
+    for dir_name in os.listdir(dest_path):
+        dest = os.path.join(export_path+dir_name)
+        dicionary = {dest: os.path.getctime(dest)}
+        diretory_creation_times.update(dicionary)
+
+    for item in sorted(diretory_creation_times, key = diretory_creation_times.get, reverse=True):
+        count +=1
+        if(count > dirs_to_keep):
+            shutil.rmtree(item)
+        
 def write_csv_popularidade(df_path, export_path):
     '''
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
