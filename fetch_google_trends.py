@@ -152,16 +152,20 @@ def agrupa_por_semana(pop_df):
     return pop_df
 
 def create_directory(export_path):
+    '''
+    Cria diretório com timestamp para guardar os csvs de popularidade. 
+    '''
     now = datetime.datetime.today() 
     timestamp_str = now.strftime("%d-%m-%Y")
     dest_path = os.path.join(export_path+timestamp_str)
+    
     if not os.path.exists(dest_path):
         try:
             os.makedirs(dest_path)
         except OSError as e: 
             print("Erro ao criar diretório: %s." %(e.strerror))
 
-    keep_last_dir(export_path, dest_path)
+    keep_last_dirs(export_path, dest_path)
 
     for filename in os.listdir(export_path):
             try: 
@@ -170,15 +174,19 @@ def create_directory(export_path):
             except OSError as e:
                 print("Erro ao copiar arquivos do diretório: %s." %(e.strerror))
 
-def keep_last_dir(export_path, dest_path):
+def keep_last_dirs(export_path, dest_path):
+    '''
+    Gera dicionário com nomes dos diretórios e a data de criação deles. A partir desse dicionário, 
+    são apagados os diretórios mais antigos, deixando os 3 mais recentes.  
+    '''
     dirs_to_keep=3
     diretory_creation_times = {}
     count = 0
 
     for dir_name in os.listdir(dest_path):
         dest = os.path.join(export_path+dir_name)
-        dicionary = {dest: os.path.getctime(dest)}
-        diretory_creation_times.update(dicionary)
+        dict = {dest: os.path.getctime(dest)}
+        diretory_creation_times.update(dict)
 
     for item in sorted(diretory_creation_times, key = diretory_creation_times.get, reverse=True):
         count +=1
