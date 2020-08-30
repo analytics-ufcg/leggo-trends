@@ -19,8 +19,9 @@ RUN R -e "devtools::install_github('analytics-ufcg/rcongresso')"
 RUN apt-get install -y python3-pip
 
 RUN pip3 install pandas
-RUN pip3 install git+https://github.com/GeneralMills/pytrends
+RUN pip3 install --upgrade --user git+https://github.com/GeneralMills/pytrends
 RUN pip3 install unidecode
+RUN pip3 install -U python-dotenv
 
 COPY . .
 RUN R -e "devtools::install()"
