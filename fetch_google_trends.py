@@ -163,7 +163,7 @@ def calcula_lote_dia(df_apelidos):
 
     return lote_dia
 
-def write_csv_popularidade(df_path, export_path):
+def write_csv_popularidade(apelidos, lote_dia, export_path):
     '''
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
@@ -171,9 +171,6 @@ def write_csv_popularidade(df_path, export_path):
     tempo_entre_req = int(os.getenv("TRENDS_WAIT_TIME"))
     props_sem_popularidade = 0
 
-    apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
-    
-    lote_dia = calcula_lote_dia(apelidos) 
     print('Coletando popularidade das proposições do lote %s' %(lote_dia)) 
 
     for index, row in apelidos.iterrows():
@@ -272,6 +269,11 @@ if __name__ == "__main__":
 
     pytrend = TrendReq(timeout=(connect_timeout, response_timeout))
 
-    create_directory(export_path)
+    apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
+    lote_dia = calcula_lote_dia(apelidos)
 
-    write_csv_popularidade(df_path, export_path)
+    # Atualiza o diretório para remover proposições que não são de interesse
+    if (lote_dia == 1):
+        create_directory(export_path)
+
+    write_csv_popularidade(apelidos, lote_dia, export_path)
