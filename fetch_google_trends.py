@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*- 
 
 import pandas as pd
+import shutil
+import sys
+import re
+import time
+import random
+import os
+import math
 from pytrends.request import TrendReq
 from pytrends.exceptions import ResponseError
 from datetime import date, datetime, timedelta
 from unidecode import unidecode
-import sys
 from pathlib import Path
-import shutil
-import re
-import time
-import random
+from dotenv import load_dotenv
 
 def print_usage():
     '''
@@ -18,7 +21,7 @@ def print_usage():
     de argumentos
     '''
 
-    print ('Chamada Correta: python fetch_google_trends.py <df_path> <export_path>')
+    print ('Chamada Correta: python fetch_google_trends.py <df_path> <export_path> <config_path>')
 
 def get_data_inicial(apresentacao):
     '''
@@ -132,6 +135,10 @@ def agrupa_por_semana(pop_df):
     return pop_df
 
 def create_directory(export_path):
+    '''
+    Cria o direório que armazena a popularidade das proposições de interesse
+    '''
+    
     path = Path(export_path)
     if path.exists():
         try:
@@ -141,105 +148,130 @@ def create_directory(export_path):
     
     path.mkdir(exist_ok=True)
 
+def calcula_lote_dia(df_apelidos):
+    '''
+    Calcula com base no epoch do sistema o lote de proposições que deve ser pesquisado no dia
+    '''
+
+    # calcula o epoch
+    diff_data = datetime.today() - datetime.utcfromtimestamp(0)
+    referencia_dias = diff_data.days
+
+    props_dia = int(os.getenv("PROPOSITIONS_DAY"))
+    total_lotes = math.ceil(len(df_apelidos.index) / props_dia)
+    lote_dia = (referencia_dias % total_lotes) + 1
+
+    return lote_dia
+
 def write_csv_popularidade(df_path, export_path):
     '''
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
 
-    tempo_entre_req = 60
+    tempo_entre_req = int(os.getenv("TRENDS_WAIT_TIME"))
     props_sem_popularidade = 0
 
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
+    
+    lote_dia = calcula_lote_dia(apelidos) 
+    print('Coletando popularidade das proposições do lote %s' %(lote_dia)) 
 
     for index, row in apelidos.iterrows():
 
-        # timeframe de até 6 meses da data de execução do script
-        timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
+        lote = row['lote']
 
-        nome_formal = row['nome_formal']
-        id_ext = str(row['id_ext'])
-        casa = row['casa']
-        id_leggo = row['id_leggo']
-        interesse = row['interesse']
+        # verificação se o lote da proposição é o do dia
+        if (lote == lote_dia):
+            
+            # timeframe de até 6 meses da data de execução do script
+            timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
 
-        # separa o nome da proposição do ano e trata MPVs
-        nome_simples = formata_nome_formal(nome_formal) 
+            nome_formal = row['nome_formal']
+            id_ext = str(row['id_ext'])
+            casa = row['casa']
+            id_leggo = row['id_leggo']
+            interesse = row['interesse']
+
+            # separa o nome da proposição do ano e trata MPVs
+            nome_simples = formata_nome_formal(nome_formal) 
  
-        # Cria conjunto de termos e adiciona aspas
-        termos = [nome_simples]
-        termos = ['"' + termo + '"' for termo in termos]
+            # Cria conjunto de termos e adiciona aspas
+            termos = [nome_simples]
+            termos = ['"' + termo + '"' for termo in termos]
 
-        # Inicializa o dataframe
-        cols_names = [
-                'id_leggo',
-                'id_ext',
-                'date',
-                'casa',
-                'interesse',
-                nome_formal,
-                'isPartial',
-                'max_pressao_principal',
-                'max_pressao_rel',
-                'maximo_geral']
+            # Inicializa o dataframe
+            cols_names = [
+                    'id_leggo',
+                    'id_ext',
+                    'date',
+                    'casa',
+                    'interesse',
+                    nome_formal,
+                    'isPartial',
+                    'max_pressao_principal',
+                    'max_pressao_rel',
+                    'maximo_geral']
 
-        pop_df = pd.DataFrame(columns = cols_names)
+            pop_df = pd.DataFrame(columns = cols_names)
 
-        # Tenta recupera a popularidade até 5 vezes
-        for n in range(0, 5):
-            try:
-                print('Tentativa %s de coletar a popularidade da proposição %s da agenda %s' %(n+1, nome_formal, interesse))
-                # Recupera as informações de popularidade a partir dos termos
-                pop_df = get_popularidade(termos, timeframe)
-                break
+            # Tenta recupera a popularidade
+            tentativas = int(os.getenv("TRENDS_RETRIES"))
+            for n in range(0, tentativas):
+                try:
+                    print('Tentativa %s de coletar a popularidade da proposição %s da agenda %s' %(n+1, nome_formal, interesse))
+                    # Recupera as informações de popularidade a partir dos termos
+                    pop_df = get_popularidade(termos, timeframe)
+                    break
     
-            except ResponseError as error:
-                print(error.args)
-                time.sleep((2 ** n) + random.random())
+                except ResponseError as error:
+                    print(error.args)
+                    time.sleep((2 ** n) + random.random())
 
-        # Recupera as informações de popularidade a partir dos termos
-        pop_df = get_popularidade(termos, timeframe)
-
-        # Caso da proposição sem popularidade
-        if (pop_df.empty):
+            # Caso da proposição sem popularidade
+            if (pop_df.empty):
         
-            print('Nome: %s TimeFrame: %s termos: %s sem informações do trends' %(nome_formal, timeframe, termos))
-            props_sem_popularidade += 1
+                print('Nome: %s Lote: %s TimeFrame: %s termos: %s sem informações do trends' %(nome_formal, lote, timeframe, termos))
+                props_sem_popularidade += 1
 
-        else:
-            print('Nome: %s TimeFrame: %s termos: %s com popularidade' %(nome_formal, timeframe, termos))
+            else:
+                print('Nome: %s Lote: %s TimeFrame: %s termos: %s com popularidade' %(nome_formal, lote, timeframe, termos))
 
-            pop_df = calcula_maximos(pop_df, termos)
-            pop_df['id_leggo'] = id_leggo
-            pop_df['id_ext'] = id_ext
-            pop_df['casa'] = casa
-            pop_df['interesse'] = interesse
-            pop_df = agrupa_por_semana(pop_df)
+                pop_df = calcula_maximos(pop_df, termos)
+                pop_df['id_leggo'] = id_leggo
+                pop_df['id_ext'] = id_ext
+                pop_df['casa'] = casa
+                pop_df['interesse'] = interesse
+                pop_df = agrupa_por_semana(pop_df)
 
-        # Escreve resultado da consulta para uma proposição
-        filename = export_path + 'pop_' + str(id_leggo) + '_' + str(interesse) + '.csv'
-        pop_df.to_csv(filename, encoding='utf8', index=False)
+            # Escreve resultado da consulta para uma proposição
+            filename = export_path + 'pop_' + str(id_leggo) + '_' + str(interesse) + '.csv'
+            pop_df.to_csv(filename, encoding='utf8', index=False)
 
-        # Esperando para a próxima consulta do trends
-        time.sleep(tempo_entre_req + random.random())
+            # Esperando para a próxima consulta do trends
+            time.sleep(tempo_entre_req + random.random())
 
-    if (props_sem_popularidade > 0):
-        print('Não foi possível retornar a popularidade de %s / %s proposições' %(props_sem_popularidade, len(apelidos))) 
 
 if __name__ == "__main__":
     # Argumentos que o programa deve receber:
     # -1º: Path para o arquivo onde estão os apelidos, nomes formais e datas de apresentações
     # -2º: Path para a pasta onde as tabelas de popularidades devem ser salvas
+    # -3º: Path para o arquivo onde estão as configurações do fetch
 
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print_usage()
         exit(1)
 
     df_path = sys.argv[1]
     export_path = sys.argv[2]
+    conf_path = sys.argv[3]
 
-    pytrend = TrendReq(timeout=(10,25))
+    load_dotenv(dotenv_path=conf_path)
+
+    connect_timeout = int(os.getenv("TRENDS_CONNECT_TIMEOUT"))
+    response_timeout = int(os.getenv("TRENDS_RESPONSE_TIMEOUT"))
+
+    pytrend = TrendReq(timeout=(connect_timeout, response_timeout))
 
     create_directory(export_path)
 
     write_csv_popularidade(df_path, export_path)
-
