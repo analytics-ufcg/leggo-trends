@@ -33,7 +33,7 @@ get_args <- function() {
                           default=1,
                           help=.HELP, 
                           metavar="character"),
-    optparse::make_option(c("-a", "--config_filepath"),
+    optparse::make_option(c("-e", "--config_filepath"),
                           type="character",
                           default="configuration.env",
                           help=.HELP,
@@ -47,11 +47,11 @@ get_args <- function() {
 
 get_lotes <- function(df_apelidos){
 
-  props_day <- Sys.getenv("PROPOSITIONS_DAY")
+  props_day <- as.numeric(Sys.getenv("PROPOSITIONS_DAY"))
   nprops <- nrow(df_apelidos)
   nlotes <- ceiling(nprops / props_day)
 
-  grupos <- sort(rep(seq(1, nlotes), ceiling(nprops/nlotes))[1:nprops])	
+  lotes <- sort(rep(seq(1, nlotes), ceiling(nprops/nlotes))[1:nprops])	
   return(lotes)
 }
 
@@ -63,13 +63,13 @@ proposicoes_filepath <- args$proposicoes_filepath
 interesses_filepath <- args$interesses_filepath
 apelidos_filepath <- args$apelidos_filepath
 update_flag <- args$update_flag
-config_path <- args$config_path
+config_path <- args$config_filepath
 
 if (update_flag == 1 | !file.exists(apelidos_filepath)) {
   cat(paste0("Criando novo arquivo em"), apelidos_filepath, "...\n")
   
   source(here::here("scripts/keywords/generate_keywords.R"))
-  
+ 
   load_dot_env(config_path)
 
   proposicoes <- read_csv(proposicoes_filepath)
