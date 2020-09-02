@@ -168,12 +168,6 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
     '''
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
-    waiting_time = 2
-    max_time = 25
-    counter = 0
-
-    props_sem_popularidade = 0
-    counter = 0
 
     tempo_entre_req = int(os.getenv("TRENDS_WAIT_TIME"))
     props_sem_popularidade = 0
