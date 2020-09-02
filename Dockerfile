@@ -12,6 +12,7 @@ RUN R -e "install.packages('devtools',dependencies=TRUE, repos='http://cran.rstu
 RUN R -e "install.packages('glmnet',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('here',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('fuzzyjoin',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('dotenv', dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('ekstroem/MESS')"
 RUN R -e "devtools::install_github('ropensci/rtweet')"
 RUN R -e "devtools::install_github('analytics-ufcg/rcongresso')"
@@ -19,8 +20,9 @@ RUN R -e "devtools::install_github('analytics-ufcg/rcongresso')"
 RUN apt-get install -y python3-pip
 
 RUN pip3 install pandas
-RUN pip3 install git+https://github.com/GeneralMills/pytrends
+RUN pip3 install --upgrade --user git+https://github.com/GeneralMills/pytrends
 RUN pip3 install unidecode
+RUN pip3 install -U python-dotenv
 
 COPY . .
-# RUN R -e "devtools::install()"
+RUN R -e "devtools::install()"
