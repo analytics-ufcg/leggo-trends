@@ -15,6 +15,7 @@ from unidecode import unidecode
 from pathlib import Path
 from dotenv import load_dotenv
 
+
 def print_usage():
     '''
     Função que printa a chamada correta em caso de o usuário passar o número errado

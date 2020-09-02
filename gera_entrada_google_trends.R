@@ -35,7 +35,7 @@ get_args <- function() {
                           metavar="character"),
     optparse::make_option(c("-e", "--config_filepath"),
                           type="character",
-                          default="configuration.env",
+                          default=here::here("configuration.env"),
                           help=.HELP,
                           metavar="character")
   );

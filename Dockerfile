@@ -12,6 +12,7 @@ RUN R -e "install.packages('devtools',dependencies=TRUE, repos='http://cran.rstu
 RUN R -e "install.packages('glmnet',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('here',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('fuzzyjoin',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('dotenv', dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('ekstroem/MESS')"
 RUN R -e "devtools::install_github('ropensci/rtweet')"
 RUN R -e "devtools::install_github('analytics-ufcg/rcongresso')"
