@@ -23,4 +23,4 @@ RUN pip3 install git+https://github.com/GeneralMills/pytrends
 RUN pip3 install unidecode
 
 COPY . .
-RUN R -e "devtools::install()"
+# RUN R -e "devtools::install()"

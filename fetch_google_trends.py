@@ -2,6 +2,7 @@
 
 import pandas as pd
 from pytrends.request import TrendReq
+import time
 from datetime import date, datetime
 import os
 import datetime
@@ -10,6 +11,7 @@ from unidecode import unidecode
 import sys
 from pathlib import Path
 import shutil
+
 
 def print_usage():
     '''
@@ -208,10 +210,23 @@ def write_csv_popularidade(df_path, export_path):
     '''
     Para cada linha do csv calcula e escreve um csv com a popularidade da proposição
     '''
+    waiting_time = 2
+    max_time = 25
+    counter = 0
+
+    props_sem_popularidade = 0
+    counter = 0
 
     props_sem_popularidade = 0
     apelidos = pd.read_csv(df_path, encoding='utf-8', parse_dates=['apresentacao'])
     for index, row in apelidos.iterrows():
+        
+
+        time.sleep(waiting_time)
+        counter += 1
+        if waiting_time < max_time:
+            waiting_time = 2 + 1.0065**counter
+
         timeframe = formata_timeframe(get_data_inicial(row['apresentacao']))
         apelido = formata_apelido(row['apelido'])
         nome_formal = row['nome_formal']
@@ -254,6 +269,8 @@ def write_csv_popularidade(df_path, export_path):
 
         print('Pesquisando a popularidade: ' + nome + ' (interesse: ' + interesse + ')')
 
+        print('Pesquisa nº: ' + str(counter) + ', Tempo de espera: ' + str(waiting_time) + ' s')
+
         termos = query + get_termos_mais_populares(nome_formal, apelido, timeframe)
         termos = set(termos)
         
@@ -277,6 +294,7 @@ def write_csv_popularidade(df_path, export_path):
             pop_df = agrupa_por_semana(pop_df)
             
         pop_df.to_csv(export_path + 'pop_' + str(id_leggo) + '_' + str(interesse) + '.csv', encoding='utf8', index=False)
+
     if (props_sem_popularidade > 0):
         print('Não foi possível retornar a popularidade de ' + str(props_sem_popularidade) + '/' + str(len(apelidos)) + ' proposições.')
 
@@ -292,7 +310,7 @@ if __name__ == "__main__":
     df_path = sys.argv[1]
     export_path = sys.argv[2]
 
-    pytrend = TrendReq()
+    pytrend = TrendReq(timeout=300)
 
     create_directory(export_path)
     
