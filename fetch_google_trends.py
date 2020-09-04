@@ -5,13 +5,11 @@ import shutil
 import sys
 import re
 import time
-import os
 import random
 import os
 import math
 import datetime
-from datetime import datetime as dt
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime as dt
 from pytrends.request import TrendReq
 from pytrends.exceptions import ResponseError
 from unidecode import unidecode
