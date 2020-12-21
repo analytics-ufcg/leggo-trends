@@ -8,9 +8,10 @@ import time
 import random
 import os
 import math
+import datetime
+from datetime import date, timedelta, datetime as dt
 from pytrends.request import TrendReq
 from pytrends.exceptions import ResponseError
-from datetime import date, datetime, timedelta
 from unidecode import unidecode
 from pathlib import Path
 from dotenv import load_dotenv
@@ -137,25 +138,64 @@ def agrupa_por_semana(pop_df):
 
 def create_directory(export_path):
     '''
-    Cria o direório que armazena a popularidade das proposições de interesse
+    Cria um diretório de backups composto por diretórios nomeados com timestamp, 
+    que guardam os csvs de popularidade. 
     '''
-    
-    path = Path(export_path)
-    if path.exists():
-        try:
-            shutil.rmtree(export_path)
-        except OSError as e:
-            print("Erro ao esvaziar pasta destino: %s." % (e.strerror))
-    
-    path.mkdir(exist_ok=True)
+    now = datetime.datetime.today() 
+    timestamp_str = now.strftime("%d-%m-%Y")
+    backup_path = os.path.join(export_path+'backups/')
 
+    if not os.path.exists(backup_path):
+        try:
+            os.makedirs(backup_path)
+        except OSError as e: 
+            print("Erro ao criar diretório de backups: %s." %(e.strerror))
+    
+    dest_path = os.path.join(backup_path+timestamp_str)
+
+    if not os.path.exists(dest_path):
+        try:
+            os.makedirs(dest_path)
+        except OSError as e: 
+            print("Erro ao criar diretório: %s." %(e.strerror))
+
+    keep_last_dirs(backup_path)
+    
+    for filename in os.listdir(export_path):
+            try: 
+                full_file_name = os.path.join(export_path, filename)
+                shutil.copy2(full_file_name,dest_path)
+            except OSError as e:
+                print("Erro ao copiar arquivos do diretório de popularidade: %s." %(e.strerror))
+
+def keep_last_dirs(backup_path):
+    '''
+    Gera dicionário com nomes dos diretórios e a data de criação deles. A partir desse dicionário, 
+    são apagados os diretórios mais antigos, deixando os 3 mais recentes.  
+    '''
+    dirs_to_keep=3
+    diretory_creation_times = {}
+    count = 0
+
+    for dir_name in os.listdir(backup_path):
+        dict = {backup_path: os.path.getctime(backup_path)}
+        diretory_creation_times.update(dict)
+
+    for item in sorted(diretory_creation_times, key = diretory_creation_times.get, reverse=True):
+        count +=1
+        try:
+            if(count > dirs_to_keep):
+                shutil.rmtree(item)
+        except OSError as e:
+                print("Erro ao apagar diretórios de backup: %s." %(e.strerror))
+        
 def calcula_lote_dia(df_apelidos):
     '''
     Calcula com base no epoch do sistema o lote de proposições que deve ser pesquisado no dia
     '''
 
     # calcula o epoch
-    diff_data = datetime.today() - datetime.utcfromtimestamp(0)
+    diff_data = dt.today() - dt.utcfromtimestamp(0)
     referencia_dias = diff_data.days
 
     props_dia = int(os.getenv("PROPOSITIONS_DAY"))
