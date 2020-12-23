@@ -236,6 +236,7 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
             # Cria conjunto de termos e adiciona aspas
             termos = [nome_simples]
             termos = ['"' + termo + '"' for termo in termos]
+            termos += ['grama']
 
             # Inicializa o dataframe
             cols_names = [
