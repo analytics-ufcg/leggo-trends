@@ -3,7 +3,7 @@ FROM rocker/tidyverse:3.6.2
 WORKDIR leggo-trends
 
 RUN apt-get update
-RUN apt-get install libssl-dev libxml2-dev libcurl4-openssl-dev vim less -y
+RUN apt-get install libssl-dev libxml2-dev libcurl4-openssl-dev libgit2-dev vim less -y 
 COPY DESCRIPTION .
 
 RUN R -e "install.packages('lubridate',dependencies=TRUE, repos='http://cran.rstudio.com/')"
