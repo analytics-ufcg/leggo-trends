@@ -110,6 +110,7 @@ def calcula_maximos(pop_df, termos_base):
     '''
 
     termos = pop_df
+    if 'grama' in termos_base: termos_base.remove('grama')
 
     # Calcula o máximo da pressão baseada nos termos principais
     termos['max_pressao_principal'] = termos[termos_base].max(axis=1)
