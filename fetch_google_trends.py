@@ -110,7 +110,6 @@ def calcula_maximos(pop_df, termos_base):
     '''
 
     termos = pop_df
-    if 'grama' in termos_base: termos_base.remove('grama')
 
     # Calcula o máximo da pressão baseada nos termos principais
     termos['max_pressao_principal'] = termos[termos_base].max(axis=1)
@@ -266,6 +265,9 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
                 except ResponseError as error:
                     print(error.args)
                     time.sleep((2 ** n) + random.random())
+
+            if 'grama' in termos: termos.remove('grama')
+            pop_df = pop_df.drop('grama', 1)
 
             # Caso da proposição sem popularidade
             if (pop_df.empty):
