@@ -23,7 +23,7 @@ def print_usage():
     de argumentos
     '''
 
-    print ('Chamada Correta: python fetch_google_trends.py <df_path> <export_path> <config_path>')
+    print ('Chamada Correta: python fetch_google_trends.py <df_path> <export_path> <backup_path> <config_path>')
 
 def get_data_inicial(apresentacao):
     '''
@@ -136,14 +136,13 @@ def agrupa_por_semana(pop_df):
 
     return pop_df
 
-def create_directory(export_path):
+def create_directory(backup_path, export_path):
     '''
     Cria um diretório de backups composto por diretórios nomeados com timestamp, 
     que guardam os csvs de popularidade. 
     '''
     now = datetime.datetime.today() 
     timestamp_str = now.strftime("%d-%m-%Y")
-    backup_path = os.path.join(export_path+'backups/')
 
     if not os.path.exists(backup_path):
         try:
@@ -164,7 +163,7 @@ def create_directory(export_path):
     for filename in os.listdir(export_path):
             try: 
                 full_file_name = os.path.join(export_path, filename)
-                shutil.copy2(full_file_name,dest_path)
+                shutil.copy2(full_file_name, dest_path)
             except OSError as e:
                 print("Erro ao copiar arquivos do diretório de popularidade: %s." %(e.strerror))
 
@@ -173,12 +172,13 @@ def keep_last_dirs(backup_path):
     Gera dicionário com nomes dos diretórios e a data de criação deles. A partir desse dicionário, 
     são apagados os diretórios mais antigos, deixando os 3 mais recentes.  
     '''
-    dirs_to_keep=3
+    dirs_to_keep = 3
     diretory_creation_times = {}
     count = 0
 
     for dir_name in os.listdir(backup_path):
-        dict = {backup_path: os.path.getctime(backup_path)}
+        dest = os.path.join(backup_path + dir_name)
+        dict = { dest: os.path.getctime(dest) }
         diretory_creation_times.update(dict)
 
     for item in sorted(diretory_creation_times, key = diretory_creation_times.get, reverse=True):
@@ -297,15 +297,17 @@ if __name__ == "__main__":
     # Argumentos que o programa deve receber:
     # -1º: Path para o arquivo onde estão os apelidos, nomes formais e datas de apresentações
     # -2º: Path para a pasta onde as tabelas de popularidades devem ser salvas
-    # -3º: Path para o arquivo onde estão as configurações do fetch
+    # -3º: Path para a pasta de backup
+    # -4º: Path para o arquivo onde estão as configurações do fetch
 
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         print_usage()
         exit(1)
 
     df_path = sys.argv[1]
     export_path = sys.argv[2]
-    conf_path = sys.argv[3]
+    backup_path = sys.argv[3]
+    conf_path = sys.argv[4]
 
     load_dotenv(dotenv_path=conf_path)
 
@@ -319,6 +321,6 @@ if __name__ == "__main__":
 
     # Atualiza o diretório para remover proposições que não são de interesse
     if (lote_dia == 1):
-        create_directory(export_path)
+        create_directory(backup_path, export_path)
 
     write_csv_popularidade(apelidos, lote_dia, export_path)
