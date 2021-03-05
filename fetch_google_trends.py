@@ -236,7 +236,7 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
             # Cria conjunto de termos e adiciona aspas
             termos = [nome_simples]
             termos = ['"' + termo + '"' for termo in termos]
-            termos += ['grama']
+            termos += ['alface americana']
 
             # Inicializa o dataframe
             cols_names = [
@@ -266,8 +266,8 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
                     print(error.args)
                     time.sleep((2 ** n) + random.random())
 
-            if 'grama' in termos: termos.remove('grama')
-            pop_df = pop_df.drop('grama', 1)
+            if 'alface americana' in termos: termos.remove('alface americana')
+            pop_df = pop_df.drop('alface americana', 1)
 
             # Caso da proposição sem popularidade
             if (pop_df.empty):
