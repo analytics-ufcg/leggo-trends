@@ -234,7 +234,7 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
             nome_simples = formata_nome_formal(nome_formal) 
  
             # Cria conjunto de termos e adiciona aspas
-            termos = [nome_simples]
+            termos = [nome_formal]
             termos = ['"' + termo + '"' for termo in termos]
             termos += ['alface americana']
 
