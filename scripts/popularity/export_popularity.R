@@ -23,7 +23,12 @@ option_list = list(
     help = "nome da pasta destino dos arquivos de saída com a popoularidade do Google Trends [default= %default]",
     metavar = "character"
   ),
-  
+  make_option(
+    c("-i", "--interesses_filepath"), 
+    type="character", 
+    default="data/interesses.csv",
+    help="caminho do arquivo de interesses [default= %default]", 
+    metavar="character"),
   make_option(
     c("-o", "--out"),
     type = "character",
@@ -37,6 +42,7 @@ opt_parser = OptionParser(option_list = option_list)
 opt = parse_args(opt_parser)
 
 twitter_trends_path <- opt$tt
+interesses_filepath <- opt$interesses_filepath
 pops_folderpath <- opt$gt
 output_path <- opt$out
 
@@ -68,7 +74,7 @@ twitter_trends <- readr::read_csv(
 )
 
 cat("Gerando dados de popularidade do Google Trends e Twitter...\n")
-popularity <- combine_indexes(twitter_trends, pops_folderpath)
+popularity <- combine_indexes(twitter_trends, pops_folderpath, interesses_filepath)
 
 write_csv(popularity, paste0(output_path))
 

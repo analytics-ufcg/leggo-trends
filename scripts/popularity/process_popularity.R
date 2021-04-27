@@ -28,11 +28,15 @@ calculate_populatiry_score <- function(trends) {
 #' dataframe com todas as colunas de ambos os dataframes mais um índice combinado.
 #' @param twitter_trends Dataframe de saída da função leggoTrends::generate_twitter_trends(tweets)
 #' @param pops_folderpath Caminho para os arquivos de destino do script fetch_google_trends.py
+#' @param interesses_filepath Caminho para o csv contendo o mapeamento de id_leggo para interesses
 #' @return Dataframe com índices do Google Trends e Twitter por PL e semana
-combine_indexes <- function(twitter_trends, pops_folderpath) {
+combine_indexes <- function(twitter_trends, pops_folderpath, interesses_filepath) {
   library(tidyverse)
   
-  files <- list.files(pops_folderpath, full.names = T)
+  files <- list.files(pops_folderpath, pattern='pop_', full.names = T)
+  
+  interesses <- read_csv(interesses_filepath) %>% 
+    select(id_leggo, interesse)
   
   google_trends <-
     purrr::map_df(files,
@@ -49,7 +53,14 @@ combine_indexes <- function(twitter_trends, pops_folderpath) {
                       maximo_geral = "d"
                     )
                   )) %>%
-    dplyr::mutate(maximo_geral_perc = round(maximo_geral / 100, 2)) %>%
+    dplyr::mutate(maximo_geral_perc = round(maximo_geral / 100, 2))
+  
+  if (!"interesse" %in% names(google_trends)) {
+    google_trends <- google_trends %>% 
+      dplyr::left_join(interesses,  by = "id_leggo")
+  } 
+  
+  google_trends <- google_trends %>% 
     dplyr::select(
       id_leggo, 
       id_ext,
