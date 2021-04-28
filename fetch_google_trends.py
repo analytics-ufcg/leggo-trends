@@ -130,7 +130,7 @@ def agrupa_por_semana(pop_df):
     '''
 
     pop_df = pop_df.reset_index()
-    pop_df = pop_df.groupby(['id_ext', pd.Grouper(key='date', freq='W-MON'), 'casa', 'interesse']).agg('max')
+    pop_df = pop_df.groupby(['id_ext', pd.Grouper(key='date', freq='W-MON'), 'casa']).agg('max')
     pop_df = pop_df.reset_index()
     pop_df['date'] = pd.to_datetime(pop_df['date']) - pd.to_timedelta(7, unit = 'd')
 
@@ -228,7 +228,6 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
             id_ext = str(row['id_ext'])
             casa = row['casa']
             id_leggo = row['id_leggo']
-            interesse = row['interesse']
 
             # separa o nome da proposição do ano e trata MPVs
             nome_simples = formata_nome_formal(nome_formal) 
@@ -244,8 +243,7 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
                     'id_ext',
                     'date',
                     'casa',
-                    'interesse',
-                    nome_formal,
+                    'nome_formal',
                     'isPartial',
                     'max_pressao_principal',
                     'max_pressao_rel',
@@ -257,7 +255,7 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
             tentativas = int(os.getenv("TRENDS_RETRIES"))
             for n in range(0, tentativas):
                 try:
-                    print('Tentativa %s de coletar a popularidade da proposição %s da agenda %s' %(n+1, nome_formal, interesse))
+                    print('Tentativa %s de coletar a popularidade da proposição %s' %(n+1, nome_formal))
                     # Recupera as informações de popularidade a partir dos termos
                     pop_df = get_popularidade(termos, timeframe)
                     break
@@ -282,11 +280,10 @@ def write_csv_popularidade(apelidos, lote_dia, export_path):
                 pop_df['id_leggo'] = id_leggo
                 pop_df['id_ext'] = id_ext
                 pop_df['casa'] = casa
-                pop_df['interesse'] = interesse
                 pop_df = agrupa_por_semana(pop_df)
 
             # Escreve resultado da consulta para uma proposição
-            filename = export_path + 'pop_' + str(id_leggo) + '_' + str(interesse) + '.csv'
+            filename = export_path + 'pop_' + str(id_leggo) + '.csv'
             pop_df.to_csv(filename, encoding='utf8', index=False)
 
             # Esperando para a próxima consulta do trends

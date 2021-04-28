@@ -18,11 +18,6 @@ get_args <- function() {
                           default="data/proposicoes.csv",
                           help=.HELP, 
                           metavar="character"),
-    optparse::make_option(c("-i", "--interesses_filepath"), 
-                          type="character", 
-                          default="data/interesses.csv",
-                          help=.HELP, 
-                          metavar="character"),
     optparse::make_option(c("-a", "--apelidos_filepath"), 
                           type="character", 
                           default="data/apelidos.csv",
@@ -60,7 +55,6 @@ args <- get_args()
 print(args)
 
 proposicoes_filepath <- args$proposicoes_filepath
-interesses_filepath <- args$interesses_filepath
 apelidos_filepath <- args$apelidos_filepath
 update_flag <- args$update_flag
 config_path <- args$config_filepath
@@ -73,8 +67,7 @@ if (update_flag == 1 | !file.exists(apelidos_filepath)) {
   load_dot_env(config_path)
 
   proposicoes <- read_csv(proposicoes_filepath)
-  interesses <- read_csv(interesses_filepath)
-  df_apelidos <- generate_keywords(proposicoes, interesses)
+  df_apelidos <- generate_keywords(proposicoes)
  
   lotes <- get_lotes(df_apelidos)
   df_apelidos <- df_apelidos %>% mutate(lote = lotes)
