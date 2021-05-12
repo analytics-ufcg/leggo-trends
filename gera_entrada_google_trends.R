@@ -66,7 +66,10 @@ if (update_flag == 1 | !file.exists(apelidos_filepath)) {
  
   load_dot_env(config_path)
 
-  proposicoes <- read_csv(proposicoes_filepath)
+  ## Filtra apenas proposições principais
+  proposicoes <- read_csv(proposicoes_filepath) %>% 
+    filter(!is.na(uri_prop_principal))
+    
   df_apelidos <- generate_keywords(proposicoes)
  
   lotes <- get_lotes(df_apelidos)
