@@ -1,0 +1,110 @@
+---
+title: "Pressão do Twitter"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r  echo=FALSE, results='hide', message=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(DT)
+
+source(here::here("scripts/tweets/process_tweets.R"))
+tweets_trends <- 
+  read_tweets_trends(
+    here::here("reports/nova_pressao/data/tweets_proposicoes.csv"),
+    here::here("reports/nova_pressao/data/interesses.csv"),
+    here::here("reports/nova_pressao/data/proposicoes.csv")
+    )
+
+props <- read_csv(here::here("reports/nova_pressao/data/proposicoes.csv")) %>% 
+  select(id_leggo, sigla) %>% 
+  distinct()
+
+dados <- tweets_trends %>% 
+  select(-c(interesse, id_ext, casa, score, interactions, username)) %>% 
+  distinct() %>% 
+  rename(total_interactions = grouped_interactions,
+         total_users = user_count) %>% 
+  left_join(props, by = "id_leggo") %>% 
+  mutate(log_interactions = if_else(total_interactions != 0, 
+                               log2(total_interactions),
+                               0)) %>%
+  mutate(score = 0.5 * total_users + 0.5 * log_interactions) %>%
+  mutate(score_normalizado = score / max(score, na.rm = T))
+```
+
+```{r echo=FALSE}
+generate_pressao <- function(df, title) {
+  df <- df %>%
+    pivot_longer(
+      cols = c(total_users, log_interactions, score, score_normalizado),
+      names_to = "metrica",
+      values_to = "Value"
+    )
+  
+  COLORS <- c(total_users = "steelblue",
+              score = "orange",
+              score_normalizado = "gray",
+              log_interactions = "darkred"
+              )
+  ggplot(df, aes(
+    x = date,
+    y = Value,
+    group = metrica,
+    color = metrica
+  )) +
+    geom_line() +
+    geom_point() +
+    scale_color_manual(values = COLORS) +
+    theme_minimal() +
+    ggtitle(title) +
+    ylab("") 
+} 
+
+```
+
+## PEC 45/2019
+
+Esta proposição possui pressão em 32 semanas (dados coletados desde 31/12/2018).
+
+```{r echo=FALSE}
+## PEC 45/2019
+pec <- dados %>%
+  filter(id_leggo == "e0c50cfb097ef9953e6b0150f45c2afc")
+
+generate_pressao(pec, "PEC 45/2019")
+```
+
+## PL 2630/2020
+
+Esta proposição possui o maior engajamento (replies + likes + retweets) (dados coletados desde 31/12/2018).
+```{r echo=FALSE}
+## PEC 45/2019
+pec <- dados %>%
+  filter(sigla == "PL 2630/2020")
+
+generate_pressao(pec, "PL 2630/2020")
+```
+
+
+## MPV 910/2019
+
+Esta proposição possui o maior número de usuários diferentes tweetando sobre em uma semana.
+```{r echo=FALSE}
+## PEC 45/2019
+pec <- dados %>%
+  filter(sigla == "MPV 910/2019")
+
+generate_pressao(pec, "MPV 910/2019")
+```
+
+```{r echo=FALSE}
+datatable(dados %>% 
+            select(sigla, data = date, total_users, total_interactions) %>% 
+            distinct())
+```

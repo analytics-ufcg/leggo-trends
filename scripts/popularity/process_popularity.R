@@ -11,23 +11,40 @@ library(tidyverse)
 combine_indexes <-
   function(twitter_filepath = NULL,
            pops_folderpath,
-           interesses_filepath) {
-    
+           interesses_filepath,
+           proposicoes_filepath) {
     source(here::here("scripts/tweets/process_tweets.R"))
-    source(here::here("scripts/google_trends/process_google_trends.R"))
+    #source(here::here("scripts/google_trends/process_google_trends.R"))
     
-    google_trends <- .bind_trends(pops_folderpath, interesses_filepath)
-    twitter_trends <- 
-      read_tweets_trends(twitter_filepath, interesses_filepath)
+    #google_trends <- .bind_trends(pops_folderpath, interesses_filepath)
+    google_trends <- tibble(
+      id_leggo = character(),
+      id_ext = integer(),
+      casa = character(),
+      interesse = character(),
+      max_pressao_principal = double(),
+      max_pressao_rel = double(),
+      maximo_geral_perc = double(),
+      date = as.Date(character())
+    )
     
-    trends <- dplyr::full_join(google_trends,
-                               twitter_trends,
-                               by = c("id_leggo", "interesse", "date")) %>%
+    twitter_trends <-
+      read_tweets_trends(twitter_filepath,
+                         interesses_filepath,
+                         proposicoes_filepath)
+    
+    trends <- dplyr::full_join(
+      google_trends,
+      twitter_trends,
+      by = c("id_leggo", "interesse", "id_ext", "casa", "date")
+    ) %>%
       dplyr::mutate(
-        twitter_mean_popularity = dplyr::if_else(is.na(interactions_normalizado), 0, interactions_normalizado),
+        twitter_mean_popularity = dplyr::if_else(is.na(twitter_trends), 0, twitter_trends),
         trends_max_popularity = dplyr::if_else(is.na(maximo_geral_perc), 0, maximo_geral_perc)
       ) %>%
-      dplyr::mutate(popularity = 0.5 * twitter_mean_popularity + 0.5 * trends_max_popularity) %>%
+      dplyr::mutate_at(vars(c("max_pressao_principal", "max_pressao_rel")),
+                       ~ replace_na(., 0)) %>% 
+      dplyr::mutate(popularity = twitter_mean_popularity) %>%
       dplyr::select(
         id_leggo,
         id_ext,

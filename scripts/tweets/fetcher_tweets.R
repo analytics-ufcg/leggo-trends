@@ -20,7 +20,7 @@ fetch_proposicoes_tweets <-
       data_final <- Sys.Date()
     
     url <-
-      str_glue("{url}?data_inicial={data_inicial}&data_final={data_final}")
+      stringr::str_glue("{url}?data_inicial={data_inicial}&data_final={data_final}")
     
     data <- RCurl::getURL(url) %>%
       jsonlite::fromJSON() %>% 
@@ -31,7 +31,8 @@ fetch_proposicoes_tweets <-
         id_leggo = character(),
         num_tweets = integer(),
         interactions = integer(),
-        created_at = date()
+        created_at = date(),
+        username = character()
       )
     }
     
