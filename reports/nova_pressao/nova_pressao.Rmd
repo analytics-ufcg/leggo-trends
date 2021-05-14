@@ -3,108 +3,173 @@ title: "Pressão do Twitter"
 output: html_document
 ---
 
+Este relatório tem como objetivo comparar duas métricas para a pressão do Twitter no Painel Parlamentria. Os dados utilizados são tweets sobre proposições monitoradas pelo Painel no período de 31/12/2018 a 26/04/2021.
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
 ```
 
-
-```{r  echo=FALSE, results='hide', message=FALSE}
+```{r results='hide'}
 library(ggplot2)
 library(tidyverse)
 library(DT)
 
-source(here::here("scripts/tweets/process_tweets.R"))
-tweets_trends <- 
-  read_tweets_trends(
-    here::here("reports/nova_pressao/data/tweets_proposicoes.csv"),
-    here::here("reports/nova_pressao/data/interesses.csv"),
-    here::here("reports/nova_pressao/data/proposicoes.csv")
-    )
-
-props <- read_csv(here::here("reports/nova_pressao/data/proposicoes.csv")) %>% 
-  select(id_leggo, sigla) %>% 
-  distinct()
-
-dados <- tweets_trends %>% 
-  select(-c(interesse, id_ext, casa, score, interactions, username)) %>% 
-  distinct() %>% 
-  rename(total_interactions = grouped_interactions,
-         total_users = user_count) %>% 
-  left_join(props, by = "id_leggo") %>% 
-  mutate(log_interactions = if_else(total_interactions != 0, 
-                               log2(total_interactions),
-                               0)) %>%
-  mutate(score = 0.5 * total_users + 0.5 * log_interactions) %>%
-  mutate(score_normalizado = score / max(score, na.rm = T))
+source(here::here("reports/nova_pressao/code/process_tweets_proposicoes.R"))
+dados <- 
+  read_csv(here::here("reports/nova_pressao/data/tweets_proposicoes.csv")) %>% 
+  .processa_dados_para_relatorio()
+  
 ```
 
-```{r echo=FALSE}
+```{r }
 generate_pressao <- function(df, title) {
   df <- df %>%
     pivot_longer(
-      cols = c(total_users, log_interactions, score, score_normalizado),
-      names_to = "metrica",
-      values_to = "Value"
+      cols = c(metricas_normalizadas, metricas_norm_log_interactions),
+      names_to = "tipo_score",
+      values_to = "value"
     )
   
-  COLORS <- c(total_users = "steelblue",
-              score = "orange",
-              score_normalizado = "gray",
-              log_interactions = "darkred"
-              )
+  COLORS <- c(metricas_normalizadas = "darkred",
+              metricas_norm_log_interactions = "steelblue")
+  
   ggplot(df, aes(
     x = date,
-    y = Value,
-    group = metrica,
-    color = metrica
+    y = value,
+    group = tipo_score,
+    color = tipo_score
   )) +
     geom_line() +
-    geom_point() +
-    scale_color_manual(values = COLORS) +
     theme_minimal() +
-    ggtitle(title) +
-    ylab("") 
+    ylab("pressão") +
+    xlab("data") +
+    scale_color_manual(values = COLORS) +
+    scale_x_date(date_labels = "%b/%Y")
 } 
 
 ```
 
-## PEC 45/2019
+## Cálculo da pressão
 
-Esta proposição possui pressão em 32 semanas (dados coletados desde 31/12/2018).
+Os scores do experimento consideram os dados de número de diferentes usuários e o número total de engajamento dos tweets sobre uma proposição em uma semana. Fizemos duas formas de calcular a pressão:
 
-```{r echo=FALSE}
-## PEC 45/2019
-pec <- dados %>%
-  filter(id_leggo == "e0c50cfb097ef9953e6b0150f45c2afc")
+- A primeira normaliza tanto o número de usuários quanto o de engajamento, dividindo cada coluna pelo maior valor geral, deixando-as numa escala entre 0 e 1.
+Depois disso é feita uma média ponderada onde 
 
-generate_pressao(pec, "PEC 45/2019")
+  **`score = 0.5 * usuarios + 0.5 * engajamento`**;
+
+- A segunda considera o log2 do engajamento no cálculo, além da normalização tanto do número de usuários quanto o valor do log de engajamento, dividindo cada coluna pelo maior valor geral, deixando-as numa escala entre 0 e 1.
+Depois disso é feita uma média ponderada onde 
+
+  **`score = 0.5 * usuarios + 0.5 * log2(engajamento)`**;
+
+## PL 3267/2019
+
+Esta proposição foi tweetada por parlamentares e/ou influenciadores por 42 semanas. Abaixo podemos ver sua pressão calculada considerando os dois scores explicados anteriormente.
+
+```{r }
+tweetada_mais_vezes <- dados %>% 
+  count(sigla) %>% 
+  arrange(desc(n)) %>% 
+  head(1) %>% 
+  pull(sigla)
+
+pl <- dados %>%
+  filter(sigla == tweetada_mais_vezes)
+
+generate_pressao(pl, tweetada_mais_vezes)
 ```
 
-## PL 2630/2020
+## PL 2630/2020 - PL das Fake News
 
-Esta proposição possui o maior engajamento (replies + likes + retweets) (dados coletados desde 31/12/2018).
-```{r echo=FALSE}
-## PEC 45/2019
-pec <- dados %>%
-  filter(sigla == "PL 2630/2020")
+Esta proposição possui o maior engajamento (replies + likes + retweets). Na semana do dia 29/06/2020, mais de 50 usuários diferentes tweetaram sobre esta PL e juntos tiveram mais de 300 mil engajamentos. Esta foi a semana em que o senado aprovou esta proposição.
 
-generate_pressao(pec, "PL 2630/2020")
+```{r }
+com_maior_engajamento <- dados %>% 
+  arrange(desc(sum_interactions)) %>% 
+  head(1) %>% 
+  pull(sigla)
+
+pl <- dados %>%
+  filter(sigla == com_maior_engajamento)
+
+generate_pressao(pl, com_maior_engajamento)
 ```
 
 
-## MPV 910/2019
+## MPV 870/2019
 
-Esta proposição possui o maior número de usuários diferentes tweetando sobre em uma semana.
-```{r echo=FALSE}
-## PEC 45/2019
-pec <- dados %>%
-  filter(sigla == "MPV 910/2019")
+Esta proposição possui o maior número de usuários diferentes tweetando sobre em uma semana. Na semana de 20/05/2019, 119 usuários (entre parlamentares e influenciadores) tweetaram sobre esta medida provisória. Esta foi a semana em que a medida foi votada e aprovada em plenário.
 
-generate_pressao(pec, "MPV 910/2019")
+```{r }
+sigla_arg <- dados %>%
+  arrange(desc(user_count)) %>% 
+  head(1) %>% 
+  pull(sigla)
+
+mp <- dados %>%
+  filter(sigla == sigla_arg)
+
+generate_pressao(mp, sigla_arg)
 ```
 
-```{r echo=FALSE}
-datatable(dados %>% 
-            select(sigla, data = date, total_users, total_interactions) %>% 
-            distinct())
+```{r }
+generate_agg_pressao <- function(df) {
+  df <- df %>%
+    pivot_longer(
+      cols = c(metricas_normalizadas, metricas_norm_log_interactions),
+      names_to = "tipo_score",
+      values_to = "Value"
+    )
+  
+  COLORS <- c(metricas_normalizadas = "darkred",
+              metricas_norm_log_interactions = "steelblue"
+              )
+  ggplot(df, aes(
+    x = date,
+    y = Value,
+    group = tipo_score,
+    color = tipo_score
+  )) +
+    geom_line() +
+    scale_color_manual(values = COLORS) +
+    theme_minimal() +
+    ylab("pressão") + 
+    xlab("data") + 
+    scale_x_date(date_labels = "%b/%Y") +
+    facet_wrap(~sigla) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+}
 ```
+
+## Proposições que possuem pressão por mais tempo
+
+```{r }
+siglas <- dados %>% 
+  count(sigla) %>% 
+  arrange(desc(n)) %>% 
+  head(6) %>% 
+  select(sigla)
+
+dados_plot <- dados %>% 
+  filter(sigla %in%(siglas$sigla)) 
+
+generate_agg_pressao(dados_plot)
+
+```
+
+As proposições falam dos seguintes assuntos:
+
+- MPV 870/2019: Reorganização dos órgãos da presidência, dos ministérios e suas atribuições;
+- MPV 910/2019: Regularização fundiária e grilagem;
+- MPV 936/2020: Programa Emergencial de Manutenção do Emprego e Renda;
+- PEC 45/2019: Reforma Tributária;
+- PEC 6/2019: Reforma da Previdência;
+- PL 2630/2020: PL das Fake News.
+
+## Tabela com os dados
+
+```{r }
+datatable(dados %>% select(-id_leggo))
+```
+
