@@ -10,6 +10,8 @@ RUN R -e "install.packages('lubridate',dependencies=TRUE, repos='http://cran.rst
 RUN R -e "install.packages('optparse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('here',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('dotenv', dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('aweek', dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('futile.logger', dependencies=TRUE, repos='http://cran.rstudio.com/')"
 
 RUN apt-get update
 RUN apt-get install -y python3-pip
