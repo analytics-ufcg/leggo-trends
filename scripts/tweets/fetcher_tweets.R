@@ -1,3 +1,6 @@
+library(tidyverse)
+library(futile.logger)
+
 #' @title Baixa dados de tweets por proposição
 #' @description A partir de uma url e um intervalo de datas,
 #' retorna dados de número de tweets e número de
@@ -12,18 +15,23 @@ fetch_proposicoes_tweets <-
   function(url = "https://leggo-twitter.herokuapp.com/api/proposicoes",
            data_inicial = NULL,
            data_final = NULL) {
-
     if (is.null(data_inicial))
       data_inicial <- lubridate::ymd(Sys.Date()) - months(3)
     
     if (is.null(data_final))
       data_final <- Sys.Date()
     
+    flog.info(
+      str_glue(
+        "Baixando dados de tweets sobre proposições entre {data_inicial} e {data_final}"
+      )
+    )
+    
     url <-
       str_glue("{url}?data_inicial={data_inicial}&data_final={data_final}")
     
     data <- RCurl::getURL(url) %>%
-      jsonlite::fromJSON() %>% 
+      jsonlite::fromJSON() %>%
       rename(id_leggo = id_proposicao_leggo)
     
     if (is.null(nrow(data))) {
