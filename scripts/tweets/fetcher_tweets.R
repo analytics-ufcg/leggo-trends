@@ -31,8 +31,7 @@ fetch_proposicoes_tweets <-
       str_glue("{url}?data_inicial={data_inicial}&data_final={data_final}")
     
     data <- RCurl::getURL(url) %>%
-      jsonlite::fromJSON() %>%
-      rename(id_leggo = id_proposicao_leggo)
+      jsonlite::fromJSON()
     
     if (is.null(nrow(data))) {
       data <- tibble(
@@ -41,6 +40,9 @@ fetch_proposicoes_tweets <-
         interactions = integer(),
         created_at = date()
       )
+    } else {
+      data <- data %>% 
+        rename(id_leggo = id_proposicao_leggo)
     }
     
     return(data)

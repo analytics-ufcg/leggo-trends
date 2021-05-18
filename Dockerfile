@@ -4,14 +4,8 @@ WORKDIR leggo-trends
 
 RUN apt-get update
 RUN apt-get install libssl-dev libxml2-dev libcurl4-openssl-dev libgit2-dev vim less -y 
-COPY DESCRIPTION .
 
-RUN R -e "install.packages('lubridate',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('optparse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('here',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('dotenv', dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('aweek', dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('futile.logger', dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages(c('lubridate', 'optparse', 'here', 'dotenv', 'aweek', 'futile.logger', 'RCurl', 'zoo'), dependencies=TRUE, repos='http://cran.rstudio.com/')"
 
 RUN apt-get update
 RUN apt-get install -y python3-pip
