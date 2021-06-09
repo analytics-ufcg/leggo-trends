@@ -52,7 +52,7 @@ combine_indexes <-
         list( ~ ifelse(is.na(.), 0, .))
       ) %>%
       mutate(trends_max_popularity = maximo_geral_perc,
-             popularity = pressao_twitter * 100) %>%
+             popularity = pressao_twitter) %>%
       select(
         id_leggo,
         id_ext,
