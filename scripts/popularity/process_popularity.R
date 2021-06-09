@@ -1,90 +1,73 @@
-#' @title Processa a popularidade de uma proposição para uma semana
-#' @description A partir de um dataframe com os tweets já sumarizados (trends) e retorna
-#' a popularidade da PL em relação a todos os tweets sobre PLs do Leg.go.
-#' @param trends Dataframe de saída da função leggoTrends::generate_twitter_trends(tweets)
-#' @return Dataframe de trends do twitter com popularidade por PL e por semana
-calculate_populatiry_score <- function(trends) {
-  library(tidyverse)
-  
-  trends_alt <- trends %>%
-    dplyr::group_by(week, interesse) %>%
-    dplyr::mutate(total_retweets = sum(retweets),
-                  total_likes = sum(favs)) %>%
-    dplyr::mutate(general_popularity = (total_retweets * 7 + total_likes * 3) / 10) %>%
-    dplyr::ungroup() %>%
-    dplyr::group_by(id_leggo, id_ext, casa, interesse, week) %>%
-    dplyr::mutate(
-      popularity = (retweets * 7 + favs * 3) / 10,
-      mean_popularity = popularity / general_popularity
-    ) %>%
-    dplyr::ungroup() %>% 
-    dplyr::select(id_leggo, id_ext, casa, interesse, date = week, mean_popularity)
-  
-  return(trends_alt)
-}
+library(tidyverse)
 
+#' @title Processa dados de pressão
 #' @description A partir de um dataframe com os tweets já sumarizados (trends) e do caminho para
 #' os arquivos processados do google Trends, combina-os em um indice único e retorna um novo
 #' dataframe com todas as colunas de ambos os dataframes mais um índice combinado.
-#' @param twitter_trends Dataframe de saída da função leggoTrends::generate_twitter_trends(tweets)
+#' @param twitter_filepath Caminho do dataframe de tweets sobre as proposições
 #' @param pops_folderpath Caminho para os arquivos de destino do script fetch_google_trends.py
+#' @param interesses_filepath Caminho para o csv contendo o mapeamento de id_leggo para interesses
+#' @param proposicoes_filepath Caminho para o csv de proposições
 #' @return Dataframe com índices do Google Trends e Twitter por PL e semana
-combine_indexes <- function(twitter_trends, pops_folderpath) {
-  library(tidyverse)
-  
-  files <- list.files(pops_folderpath, full.names = T)
-  
-  google_trends <-
-    purrr::map_df(files,
-                  ~ readr::read_csv(
-                    .x,
-                    col_types = readr::cols(
-                      .default = "d",
-                      id_ext = "c",
-                      id_leggo = "c",
-                      interesse = "c",
-                      casa = "c",
-                      isPartial = "l",
-                      date = readr::col_date(format = "%Y-%m-%d"),
-                      maximo_geral = "d"
-                    )
-                  )) %>%
-    dplyr::mutate(maximo_geral_perc = round(maximo_geral / 100, 2)) %>%
-    dplyr::select(
-      id_leggo, 
-      id_ext,
-      casa,
-      interesse,
-      max_pressao_principal,
-      max_pressao_rel,
-      maximo_geral_perc,
-      date
+combine_indexes <-
+  function(twitter_filepath = NULL,
+           pops_folderpath,
+           interesses_filepath,
+           proposicoes_filepath) {
+    source(here::here("scripts/tweets/process_tweets.R"))
+    #source(here::here("scripts/google_trends/process_google_trends.R"))
+    
+    # google_trends <- .bind_trends(pops_folderpath, interesses_filepath)
+    
+    google_trends <- tibble(
+      id_leggo = character(),
+      id_ext = integer(),
+      casa = character(),
+      interesse = character(),
+      max_pressao_principal = double(),
+      max_pressao_rel = double(),
+      maximo_geral_perc = double(),
+      date = as.Date(character())
     )
-  
-  twitter_trends <- twitter_trends %>%
-    dplyr::mutate(date = as.Date(date))
-  
-  trends <- dplyr::full_join(google_trends,
-                             twitter_trends,
-                             by = c("id_leggo", "id_ext", "casa", "interesse", "date")) %>%
-    dplyr::mutate(
-      twitter_mean_popularity = dplyr::if_else(is.na(mean_popularity), 0, mean_popularity),
-      trends_max_popularity = dplyr::if_else(is.na(maximo_geral_perc), 0, maximo_geral_perc)
+    
+    twitter_trends <-
+      process_tweets_trends(twitter_filepath,
+                            interesses_filepath,
+                            proposicoes_filepath)
+    
+    trends <- dplyr::full_join(
+      google_trends,
+      twitter_trends,
+      by = c("id_leggo", "interesse", "date", "id_ext", "casa")
     ) %>%
-    dplyr::mutate(popularity = 0.5 * twitter_mean_popularity + 0.5 * trends_max_popularity) %>%
-    dplyr::select(
-      id_leggo, 
-      id_ext,
-      casa,
-      interesse,
-      date,
-      trends_max_pressao_principal = max_pressao_principal,
-      trends_max_pressao_rel = max_pressao_rel,
-      trends_max_popularity,
-      twitter_mean_popularity,
-      popularity
-    ) %>%
-    dplyr::distinct()
-  
-  return(trends)
-}
+      mutate_at(
+        vars(
+          max_pressao_principal,
+          max_pressao_rel,
+          maximo_geral_perc,
+          user_count,
+          sum_interactions,
+          pressao_twitter
+        ),
+        list( ~ ifelse(is.na(.), 0, .))
+      ) %>%
+      mutate(trends_max_popularity = maximo_geral_perc,
+             popularity = pressao_twitter) %>%
+      select(
+        id_leggo,
+        id_ext,
+        casa,
+        interesse,
+        date,
+        trends_max_pressao_principal = max_pressao_principal,
+        trends_max_pressao_rel = max_pressao_rel,
+        trends_max_popularity,
+        user_count,
+        sum_interactions,
+        twitter_mean_popularity = pressao_twitter,
+        popularity
+      ) %>%
+      distinct()
+    
+    return(trends)
+  }
