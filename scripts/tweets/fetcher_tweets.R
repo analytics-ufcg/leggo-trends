@@ -12,7 +12,7 @@ library(futile.logger)
 #' @return Dataframe contendo id_proposicao_leggo,
 #' num_tweets, interactions e created_at.
 fetch_proposicoes_tweets <-
-  function(url = "https://leggo-twitter.herokuapp.com/api/proposicoes",
+  function(url = "https://twitter-api.parlametria.org.br/api/proposicoes",
            data_inicial = NULL,
            data_final = NULL) {
     if (is.null(data_inicial))
