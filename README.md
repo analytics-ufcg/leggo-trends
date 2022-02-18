@@ -68,7 +68,7 @@ docker-compose run --rm leggo-trends \
 ```
 
 onde:
-- `<url_twitter_api>`: Endereço para a API do leggo-twitter: https://leggo-twitter.herokuapp.com/api;
+- `<url_twitter_api>`: Endereço para a API do leggo-twitter: https://twitter-api.parlametria.org.br/api;
 - `<data_inicial>`: Data inicial do intervalo, no formato AAAA-MM-DD;
 - `<data_final>`: Data final do intervalo, no formato AAAA-MM-DD;
 - `<data_path>`: Caminho para o destino do csv tweets_proposicoes.csv (entrada do processador de pressão).
